@@ -4,7 +4,7 @@ newMutableStream = (str, pos) => {
     o.eof = () => pos >= str.length;
     o.chr = () => str[pos];
     o.next = () => { pos++ }
-    o.getStuck = () => newStream(str, pos+1);
+    o.getStuck = () => newStream(str, pos);
     return o;
 }
 newStream = (str, pos) => {
@@ -43,7 +43,7 @@ var try_symbol = (s) => {
         if ( notValid.hasOwnProperty(ms.chr()) ) {
             return {
                 type: 'symbol',
-                value: value,
+                value: ['symbol', value],
                 stream: ms.getStuck()
             };
         }
@@ -141,7 +141,9 @@ var eat_whitespace = (s) => {
     }
 }
 
-var try_object = (s) => {
+var try_any = () => { throw new Error('noop'); };
+
+var try_assoc = (s) => {
     if ( s.chr() != '{' ) {
         return {
             type: 'unknown',
@@ -150,30 +152,116 @@ var try_object = (s) => {
     }
     s = s.next();
     s = eat_whitespace(s).stream;
-    key = alt(s, try_string, try_symbol);
-    s = eat_whitespace(s).stream;
-    if ( s.chr() == ':' ) {
-        s = s.next();
+
+    var members = [];
+
+    while ( true ) {
+        key = alt(s, try_string, try_symbol);
+        if ( key.type == 'invalid' ) return key;
+        s = key.stream;
         s = eat_whitespace(s).stream;
+        if ( s.chr() == ':' ) {
+            s = s.next();
+            s = eat_whitespace(s).stream;
+        }
+        value = try_any(s);
+        if ( value.type == 'invalid' ) return value;
+        s = value.stream;
+        s = eat_whitespace(s).stream;
+
+        members.push(key.value);
+        members.push(value.value);
+
+        if ( s.chr() == '}' ) break;
+        if ( s.chr() == ',' ) {
+            s = s.next();
+            s = eat_whitespace(s).stream;
+        }
     }
-    //
-    return key;
+
+    return {
+        type: 'assoc',
+        value: ['assoc', ...members]
+    };
 }
 
-(function () {
-    var tmp;
-    tmp = try_string;
-    try_string = (s) => ok(s, s => tmp(s));
-})();
+parse_list_tokens = (s, terminator) => {
+    items = [];
+    while ( s.chr() != terminator ) {
+        result = try_any(s);
+        if ( result.type == 'invalid' ) {
+            result.tmp = 'l' + ( result.tmp ? result.tmp : '' );
+            return result;
+        }
+        items.push(result.value);
+        s = eat_whitespace(s).stream;
+    }
+    return {
+        type: 'rawlist',
+        value: items
+    }
+}
+
+try_list = (s) => {}
+
+try_code = (s) => {}
+
+try_any = (s) => {
+    var result =  alt(s,
+        try_string,
+        try_symbol,
+        try_assoc
+    );
+    if ( result.type == 'unknown' ) {
+        result.type = 'invalid';
+    }
+    return result;
+}
+
+try_script = (s) => {
+    // Script is allowed to begin with whitespace
+    s = eat_whitespace(s).stream;
+
+    command = try_symbol(s);
+    if ( command.type != 'symbol' ) return { type: 'invalid' }
+    s = command.stream;
+    s = eat_whitespace(s).stream;
+
+    // TODO: maybe instead of command.value[1] use actual parser
+    if ( command.value[1] != 'def' ) {
+        return {
+            type: 'invalid',
+            info: 'only def is supported',
+            expected: 'def',
+            found: command.value
+        };
+    }
+
+    // assume def command (for now)
+    pattern = try_symbol(s);
+    if ( pattern.type != 'symbol' ) return { type: 'invalid' }
+    s = pattern.stream;
+    s = eat_whitespace(s).stream;
+}
+
+['try_string', 'try_symbol', 'try_assoc', 'try_any'].forEach(name => {
+    var tmp = this[name];
+    this[name] = (s) => ok(s, s => tmp(s));
+});
 
 with ({
     ...require('./boot.js')
 }) {
 
-    console.log(try_string(newStream(`"Hello"`, 0)));
-    console.log(try_symbol(newStream(`Hello[]there`, 0)));
-    console.log(try_symbol(newStream(`Hello  :  a[]there`, 0)));
-    console.log(try_object(newStream(`{ Hello  :  a[]there`, 0)));
+    // console.log(try_string(newStream(`"Hello"`, 0)));
+    // console.log(try_symbol(newStream(`Hello[]there`, 0)));
+    // console.log(try_symbol(newStream(`Hello  :  a[]there`, 0)));
+    // console.log(try_assoc(newStream(`{ Hello  :  a }[]there`, 0)));
+    console.log(JSON.stringify(try_script(newStream(`
+        def function lame.example.sayhello [
+            (env.logger.info 'Hello, World!')
+        ]
+    `, 0))));
 
 }
 

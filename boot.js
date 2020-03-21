@@ -37,6 +37,15 @@ l('pattern', 'lame.patterns.typeswitch').def = [
     ['map', ['type'], ['block']]
 ];
 
+l('pattern', 'function').def = [
+    ['either', [
+        ['list']
+    ], [
+        ['object'],
+        ['list']
+    ]
+];
+
 l('pattern', 'lame.language.def').def = [
     ['symbol'],
     ['set', 'subPattern', ['symbol']],
