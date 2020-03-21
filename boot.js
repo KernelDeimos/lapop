@@ -37,14 +37,28 @@ l('pattern', 'lame.patterns.typeswitch').def = [
     ['map', ['type'], ['block']]
 ];
 
+l('pattern', 'pattern').def = [
+    // First (and only) item in a pattern
+    ['list',
+        // A list that defines a type
+        ['list',
+            // The type list contains one symbol that
+            //   specifies the type as 'list'
+            ['symbol', 'list']
+        ]
+    ]
+];
+
+/*
 l('pattern', 'function').def = [
     ['either', [
         ['list']
     ], [
         ['object'],
         ['list']
-    ]
+    ]]
 ];
+*/
 
 l('pattern', 'lame.language.def').def = [
     ['symbol'],
