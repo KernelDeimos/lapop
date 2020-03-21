@@ -29,6 +29,7 @@ l = (() => {
     };
 })();
 
+/*
 l('pattern', 'lame.patterns.typeswitch').def = [
     ['object', {
         with: ['statement'],
@@ -36,6 +37,7 @@ l('pattern', 'lame.patterns.typeswitch').def = [
     }],
     ['map', ['type'], ['block']]
 ];
+*/
 
 l('pattern', 'pattern').def = [
     // First (and only) item in a pattern
@@ -60,11 +62,13 @@ l('pattern', 'function').def = [
 ];
 */
 
+/*
 l('pattern', 'lame.language.def').def = [
     ['symbol'],
     ['set', 'subPattern', ['symbol']],
     ['get', 'subPattern']
 ]
+*/
 
 module.exports = {
     lame: lame,
