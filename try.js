@@ -51,9 +51,27 @@ var h_ = (o) => {
     return p;
 }
 
+var depth = 0;
+var depthTrack_ = (f, name) => {
+    return (...args) => {
+        let tmp = console.log;
+        if ( depth === 0 ) console.log = (...args2) => {
+            let s = '';
+            for ( let x = 0; x < depth; x++) {
+                s += '-';
+            }
+            tmp("\033[36;1m"+s+"\033[0m", ...args2);
+        }
+        depth++;
+        let r = f(...args);
+        depth--;
+        if ( depth === 0 ) console.log = tmp;
+        return r;
+    }
+}
+
 var uh_javascriptify = () => {};
 uh_javascriptify = (lis) => {
-    console.log('uhhhhh', JSON.stringify(lis))
     if ( lis.length < 1 ) throw new Error('invalid list');
     switch ( lis[0] ) {
         case 'list':
@@ -79,6 +97,7 @@ newMutableStream = (str, pos) => {
 }
 newStream = (str, pos) => {
     var o = {};
+    o.preview = str.split('').slice(pos).join('');
     o.eof = () => pos >= str.length;
     o.chr = () => str[pos];
     o.next = () => newStream(str, pos+1);
@@ -352,20 +371,28 @@ var process_pattern_by_name = (name, s) => {
         case 'list':
             result = try_list(s);
             if ( emptyToken(result) ) return setAsDefiant(result);
-            return result
+            s = result.stream;
+            return h_({
+                type: 'filling',
+                value: [ result.value ],
+                stream: s
+            })
         case 'object':
             result = try_assoc(s);
             if ( emptyToken(result) ) return setAsDefiant(result);
-            console.log('object result', result);
-            return result
+            s = result.stream;
+            return h_({
+                type: 'filling',
+                value: [ result.value ],
+                stream: s
+            })
         default:
             maybeDef = l('pattern', name);
-            console.log('maybeDef', JSON.stringify(maybeDef));
             if ( maybeDef.hasOwnProperty('def') ) {
                 result = process_pattern(maybeDef.def[0], s);
                 if ( emptyToken(result) )
                     return setAsDefiant(result);
-                console.log('pattern result', result);
+                console.log('pattern result', JSON.stringify(result.value));
                 return result;
             }
             return h_({
@@ -387,9 +414,9 @@ process_pattern = (pattern, s) => {
 
     // Temporary hack until list processing is handled properly
     pattern = uh_javascriptify(pattern);
-    console.log('jsify', pattern);
 
-    pattern.forEach(patternNode => {
+    for ( let iTop = 0; iTop < pattern.length; iTop++ ) {
+        let patternNode = pattern[iTop];
         var patternName = patternNode[0];
         if ( typeof patternName !== 'string' ) {
             // temporary?
@@ -399,63 +426,71 @@ process_pattern = (pattern, s) => {
         if ( s === undefined ) console.log('undefined s');
         switch ( patternName ) {
             case 'either':
-                var intermediateMembers = [];
-                var forEachReturn = null;
-                patternNode.slice(1).forEach(currentPattern => {
+                let success = false;
+                for (
+                    let iEither = 0;
+                    iEither < patternNode.slice(1).length;
+                    iEither++
+                ) {
+                    let currentPattern = patternNode.slice(1)[iEither];
+                    console.log('trying', currentPattern);
                     var intermediateResult = process_pattern(currentPattern, s);
                     if ( intermediateResult.type === 'invalid' ) {
                         // A type matched but it was invalid; abort and
                         // report the intermediate result
-                        forEachReturn = intermediateResult;
-                        return false;
+                        console.log('Syntax error!');
+                        return intermediateResult;
                     }
-                    if ( intermediateResult.type === 'unknown' ) {
+                    if ( emptyToken(intermediateResult) ) {
+                        console.log('Nope!');
                         // Try the next pattern
-                        return;
+                        continue;
                     }
                     // If we got here, the pattern matched
-                    tokens.push(intermediateResult);
-                    console.log('intermediate', intermediateResult);
+                    tokens.push(...intermediateResult.value);
+                    console.log('That worked!');
                     s = intermediateResult.stream;
                     s = eat_whitespace(s).stream;
-                    return false;
-                })
-                if ( forEachReturn !== null ) return forEachReturn;
-                return h_({
-                    type: 'invalid',
-                    info: 'no patterns matched',
-                    stream: s
-                });
+                    success = true;
+                    break;
+                }
+                if ( ! success ) {
+                    console.log('Nothing worked!');
+                    return h_({
+                        type: 'invalid',
+                        info: 'no patterns matched',
+                        stream: s
+                    });
+                }
+                break;
             default:
                 let result = process_pattern_by_name(patternName, s);
                 if ( emptyToken(result) ) {
-                    console.log('invalid token for pattern')
                     result.info = `pattern could not apply due to `
                         +result.type
                         +' token'+(result.info ? '; ' + result.info : '');
-                    result.type = 'invalid';
-                    outerForEachReturn = result;
-                    return false;
+                    return setAsDefiant(result);
                 }
-                console.log('push token', result);
-                tokens.push(result);
-                console.log('here');
+                tokens.push(...result.value);
                 if ( s === undefined ) console.log('undefined s');
-                console.log(result);
                 s = result.stream;
                 if ( s === undefined ) console.log('undefined s');
                 s = eat_whitespace(s).stream;
                 if ( s === undefined ) console.log('undefined s');
         }
-    });
-    if ( outerForEachReturn !== null ) return outerForEachReturn;
-    console.log('tokens', tokens);
+    }
+    if ( outerForEachReturn !== null ) {
+        return outerForEachReturn;
+    }
     return h_({
         type: 'filling',
-        value: tokens.map(t => t.value),
+        value: tokens,
         stream: s
     })
 }
+
+process_pattern = depthTrack_(process_pattern);
+process_pattern_by_name = depthTrack_(process_pattern_by_name);
 
 try_def = (s) => {
     command = try_symbol(s);
@@ -553,14 +588,23 @@ with ({
 
     let result = process_definitions(newStream(`
         def pattern function [
-            [object]
-            [list]
+            [either [
+                [object]
+                [list]
+            ] [
+                [list]
+                [list]
+            ]]
         ]
 
-        def function sayhello {} [e f g]
+        def function sayhello {a b} [e f g]
+        def function saynoodles [a b c] [e f g]
+        def function breakit [a b c] {e f g h}
     `, 0));
     console.log('result', JSON.stringify(result, null, 4));
     console.log('test object', JSON.stringify(l('pattern', 'funtimes'), null, 4))
     console.log('test object', JSON.stringify(l('function', 'sayhello'), null, 4))
+    console.log('test object', JSON.stringify(l('function', 'breakit'), null, 4))
+
 
 }
