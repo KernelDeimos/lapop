@@ -1,3 +1,5 @@
+var l;
+
 // Shamelessly stolen from StackOverflow (2343343)
 function lnb4() {
   var e = new Error();
@@ -20,6 +22,12 @@ function lnb4() {
         );
     }
 })()
+
+var oldConsole = null;
+if ( ! process.env.PARSER_DEBUG ) {
+    oldConsole_ = console.log
+    console.log = () => {};
+}
 
 // object history tracker (for convenient debugging)
 var h_ = (o) => {
@@ -114,7 +122,7 @@ var ok = (s, delegate) => {
 
 var try_symbol = (s) => {
     var notValid = {};
-    '{}[]()+=*/^%\\&|\'"` \r\n\t'.split('')
+    '{}[]()\'"` \r\n\t'.split('')
         .forEach(v => { notValid[v] = true; });
     if ( notValid.hasOwnProperty(s.chr()) ) {
         return h_({
@@ -193,6 +201,7 @@ var try_string = (s) => {
     }
     return h_({
         type: 'invalid',
+        info: 'string did not terminate',
         stream: s
     })
 };
@@ -235,6 +244,7 @@ var eat_whitespace = (s) => {
 }
 
 var try_any = () => { throw new Error('noop'); };
+var try_code_item = () => { throw new Error('noop'); };
 
 var try_assoc = (s) => {
     if ( s.chr() != '{' ) {
@@ -286,10 +296,14 @@ var try_assoc = (s) => {
     });
 }
 
-var parse_list_tokens = (s, terminator) => {
+var parse_list_tokens = (s, terminator, try_item) => {
     var items = [];
-    while ( s.chr() != terminator ) {
-        let result = try_any(s);
+    cond = () => s.chr() != terminator;
+    if ( terminator === null ) {
+        cond = () => ! s.eof();
+    }
+    while ( cond() ) {
+        let result = try_item(s);
         if ( result.type == 'invalid' ) {
             result.tmp = 'l' + ( result.tmp ? result.tmp : '' );
             return result;
@@ -320,7 +334,7 @@ var try_list = (s) => {
     }
     s = s.next();
     s = eat_whitespace(s).stream;
-    var r_items = parse_list_tokens(s, ']');
+    var r_items = parse_list_tokens(s, ']', try_any);
     if ( r_items.type === 'invalid' ) {
         return r_items;
     }
@@ -333,13 +347,51 @@ var try_list = (s) => {
     return r_items;
 }
 
-var try_code = (s) => {}
+var try_code = (s) => {
+    if  ( s.chr() !== '(' ) {
+        return h_({
+            type: 'unknown',
+            info: "'"+s.chr()+"' is not '('",
+            tmp: 'l',
+            stream: s
+        })
+    }
+    s = s.next();
+    s = eat_whitespace(s).stream;
+    var r_items = parse_list_tokens(s, ')', try_any);
+    if ( r_items.type === 'invalid' ) {
+        return r_items;
+    }
+
+    s = r_items.stream;
+    r_items.stream = s.next();
+
+    r_items.value = ['code'].concat(r_items.value);
+    r_items.type = 'code';
+    return r_items;
+}
 
 var try_any = (s) => {
     let result =  alt(s,
         try_string,
         try_symbol,
         try_assoc,
+        try_list,
+        try_code,
+    );
+    if ( result.type == 'unknown' ) {
+        result.type = 'invalid';
+    }
+    return result;
+}
+
+// TODO: probably get rid of this. It was an interesting idea
+//       but patterns allow any types. It is, however, a
+//       requirement that code blocks begin with either a
+//       ['symbol' ...] or a ['code' ...]
+var try_code_item = (s) => {
+    let result =  alt(s,
+        try_symbol,
         try_list,
     );
     if ( result.type == 'unknown' ) {
@@ -514,12 +566,18 @@ try_def = (s) => {
 
     // assume def command (for now)
     let pattern = try_symbol(s);
-    if ( pattern.type != 'symbol' ) return { type: 'invalid' }
+    if ( pattern.type != 'symbol' ) return {
+        type: 'invalid',
+        info: 'expected pattern',
+    }
     s = pattern.stream;
     s = eat_whitespace(s).stream;
 
     let identifier = try_symbol(s);
-    if ( identifier.type != 'symbol' ) return { type: 'invalid' }
+    if ( identifier.type != 'symbol' ) return {
+        type: 'invalid',
+        info: 'expected symbol',
+    }
     s = identifier.stream;
     s = eat_whitespace(s).stream;
 
@@ -564,14 +622,16 @@ var process_definitions = (s) => {
     }
 }
 
+/*
 ['try_string', 'try_symbol', 'try_assoc', 'try_any'].forEach(name => {
     var tmp = this[name];
     this[name] = (s) => ok(s, s => tmp(s));
 });
+*/
 
-with ({
-    ...require('./boot.js')
-}) {
+// with ({
+//     ...require('./boot.js')
+// }) {
 
     // console.log(try_string(newStream(`"Hello"`, 0)));
     // console.log(try_symbol(newStream(`Hello[]there`, 0)));
@@ -586,7 +646,20 @@ with ({
     //     `def tester test.example.list {a b c d} [e f g h]
     // `, 0)),null,4));
 
-    let result = process_definitions(newStream(`
+    // def function sayhello {a b} [e f g]
+    // def function saynoodles [a b c] [e f g]
+    // def function breakit [a b c] {e f g h}
+
+    // console.log('result', JSON.stringify(result, null, 4));
+    // console.log('test object', JSON.stringify(l('pattern', 'funtimes'), null, 4))
+    // console.log('test object', JSON.stringify(l('function', 'sayhello'), null, 4))
+    // console.log('test object', JSON.stringify(l('function', 'breakit'), null, 4))
+
+
+// }
+
+function addPatterns() {
+    process_definitions(newStream(`
         def pattern function [
             [either [
                 [object]
@@ -596,15 +669,21 @@ with ({
                 [list]
             ]]
         ]
-
-        def function sayhello {a b} [e f g]
-        def function saynoodles [a b c] [e f g]
-        def function breakit [a b c] {e f g h}
     `, 0));
-    console.log('result', JSON.stringify(result, null, 4));
-    console.log('test object', JSON.stringify(l('pattern', 'funtimes'), null, 4))
-    console.log('test object', JSON.stringify(l('function', 'sayhello'), null, 4))
-    console.log('test object', JSON.stringify(l('function', 'breakit'), null, 4))
+}
 
+if ( oldConsole !== null ) {
+    console.log = oldConsole;
+}
 
+module.exports = (soup) => {
+    l = soup.l;
+    addPatterns();
+    tools = {};
+    tools.newStream = newStream;
+    tools.alt = alt;
+    tools.try_any = try_any;
+    tools.parse_list_tokens = parse_list_tokens;
+    tools.eat_whitespace = eat_whitespace;
+    return tools;
 }
