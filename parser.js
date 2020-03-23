@@ -1,3 +1,5 @@
+'use strict';
+
 var l;
 
 // Shamelessly stolen from StackOverflow (2343343)
@@ -17,7 +19,7 @@ function lnb4() {
     let tmp = console.log;
     console.log = (...items) => {
         tmp(
-            '\033[33;1m['+__filename+':'+lnb4()+']\033[0m',
+            '\x1B[33;1m['+__filename+':'+lnb4()+']\x1B[0m',
             ...items
         );
     }
@@ -32,7 +34,7 @@ if ( ! process.env.PARSER_DEBUG ) {
 // object history tracker (for convenient debugging)
 var h_ = (o) => {
     o._h = {};
-    for ( k in o ) if ( o.hasOwnProperty(k) ) {
+    for ( let k in o ) if ( o.hasOwnProperty(k) ) {
         if ( k == '_h' ) continue;
         o._h[k] = [{
             at: 'origin:' + lnb4(),
@@ -40,7 +42,7 @@ var h_ = (o) => {
         }]
     }
     var context = 'no_context';
-    p = new Proxy(o, {
+    var p = new Proxy(o, {
         set: (o, k, v) => {
             if ( ! o._h.hasOwnProperty(k) ) {
                 o._h[k] = [];
@@ -49,7 +51,7 @@ var h_ = (o) => {
                 at: context + ':' + lnb4(),
                 val: JSON.stringify(v)
             });
-            o[k] = v;
+            return o[k] = v;
         }
     });
     o.h_setctx_ = newctx => {
@@ -68,7 +70,7 @@ var depthTrack_ = (f, name) => {
             for ( let x = 0; x < depth; x++) {
                 s += '-';
             }
-            tmp("\033[36;1m"+s+"\033[0m", ...args2);
+            tmp("\x1B[36;1m"+s+"\x1B[0m", ...args2);
         }
         depth++;
         let r = f(...args);
@@ -95,7 +97,7 @@ uh_javascriptify = (lis) => {
 }
 
 var newStream = () => {};
-newMutableStream = (str, pos) => {
+var newMutableStream = (str, pos) => {
     var o = {};
     o.eof = () => pos >= str.length;
     o.chr = () => str[pos];
@@ -230,7 +232,7 @@ var alt = (s, ...options) => {
 }
 
 var eat_whitespace = (s) => {
-    wsMap = {
+    var wsMap = {
         "\n": true,
         "\r": true,
         "\t": true,
@@ -298,10 +300,11 @@ var try_assoc = (s) => {
 
 var parse_list_tokens = (s, terminator, try_item) => {
     var items = [];
-    cond = () => s.chr() != terminator;
+    var cond = () => s.chr() != terminator;
     if ( terminator === null ) {
         cond = () => ! s.eof();
     }
+
     while ( cond() ) {
         let result = try_item(s);
         if ( result.type == 'invalid' ) {
@@ -340,10 +343,11 @@ var try_list = (s) => {
     }
 
     s = r_items.stream;
-    r_items.stream = s.next();
+    s = s.next();
 
     r_items.value = ['list'].concat(r_items.value);
     r_items.type = 'list';
+    r_items.stream = s;
     return r_items;
 }
 
@@ -439,7 +443,7 @@ var process_pattern_by_name = (name, s) => {
                 stream: s
             })
         default:
-            maybeDef = l('pattern', name);
+            let maybeDef = l('pattern', name);
             if ( maybeDef.hasOwnProperty('def') ) {
                 result = process_pattern(maybeDef.def[0], s);
                 if ( emptyToken(result) )
@@ -544,8 +548,8 @@ process_pattern = (pattern, s) => {
 process_pattern = depthTrack_(process_pattern);
 process_pattern_by_name = depthTrack_(process_pattern_by_name);
 
-try_def = (s) => {
-    command = try_symbol(s);
+var try_def = (s) => {
+    let command = try_symbol(s);
     if ( emptyToken(command) ) {
         command.type = 'invalid';
         return command;
@@ -669,6 +673,8 @@ function addPatterns() {
                 [list]
             ]]
         ]
+
+        def function sayhello {a b} [e f g]
     `, 0));
 }
 
@@ -679,11 +685,13 @@ if ( oldConsole !== null ) {
 module.exports = (soup) => {
     l = soup.l;
     addPatterns();
-    tools = {};
+    var tools = {};
     tools.newStream = newStream;
     tools.alt = alt;
     tools.try_any = try_any;
+    tools.try_list = try_list;
     tools.parse_list_tokens = parse_list_tokens;
     tools.eat_whitespace = eat_whitespace;
+    tools.process_definitions = process_definitions;
     return tools;
 }
