@@ -10,9 +10,10 @@ new_lame_object = () => {
     return o;
 }
 
+var stores = {};
+var orders = {};
+
 l = (() => {
-    stores = {};
-    orders = {};
     return (type, name) => {
         var _b = () => {
             stores[type][name] = new_lame_object();
@@ -72,5 +73,9 @@ l('pattern', 'lame.language.def').def = [
 
 module.exports = {
     lame: lame,
-    l: l
+    l: l,
+    _debug: {
+        getStores: () => stores,
+        getOrders: () => orders
+    }
 }
