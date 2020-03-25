@@ -2,6 +2,7 @@ var jslib = {};
 
 jslib.fmap_convertData = {
   list: data => data,
+  code: data => data,
   symbol: data => data.join('.'),
   assoc: data => {
     if ( data.length % 2 !== 0 ) {
@@ -77,6 +78,32 @@ jslib.assertData = (funcMap, type, data) => {
     data.info = 'type did not match assertion'
   }
   return data;
+}
+
+jslib.programmerError = (...msg) => {
+  throw new Error(...msg);
+}
+
+jslib.util = {};
+jslib.util.requireParams = (configuration, requires) => {
+  var params = {};
+  requires.forEach(require => {
+    switch ( typeof require ) {
+      case 'string':
+        if ( ! configuration.hasOwnProperty(require) ) {
+          // This functions does throw an exception, but
+          // the return adds flexibility to change that later.
+          return jslib.programmerErrorr(
+            `missing requirement: '${require}'`);
+        }
+        params[require] = configuration[require];
+        break;
+      case 'object':
+        return jslib.programmerError(
+          'typespec requirements have not beel implemented yet');
+    }
+  });
+  return params;
 }
 
 module.exports = jslib;

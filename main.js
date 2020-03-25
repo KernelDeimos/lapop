@@ -1,5 +1,7 @@
 var boot = require('./boot.js');
 
+var jslib = require('./jslib');
+
 var parserInit = require('./parser.js');
 var parse = parserInit({
   l: boot.l
@@ -49,3 +51,40 @@ result = executor.process_pattern(
 );
 
 console.log(result);
+
+console.log('-------------');
+
+var fmap = {};
+var ev = executor.newFuncMapEvaluator(fmap);
+var ex = executor.newBlockExecutor({
+  resultHandler: () => {},
+  evaluator: ev,
+});
+fmap.if = args => {
+  if ( args[0] ) {
+    let code = jslib.assertData(null, 'list', args[1]);
+    console.log("1!!!", code);
+    ex(executor.newListStream(code.value, 0));
+  }
+}
+fmap.a = () => 2;
+fmap.eq = (...args) => {
+  if ( args.length < 1 ) return true; // I suppose?
+  let previous = args[0];
+  for ( let i=1; i < args.length; i++ ) {
+    if ( args[i] != previous ) return false;
+    previous = args[i];
+  }
+  return true;
+};
+fmap.log = (msg) => {
+  console.log(...msg);
+}
+
+result = ex(
+  executor.newListStream(serialize_code(`
+    if (eq (a) 2) [
+      (log 'Hello')
+    ]
+  `).value, 0)
+);
