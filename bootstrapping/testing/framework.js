@@ -76,14 +76,14 @@ lib.runTestCase = (testCase, vars) => {
     extra = localUtil.adaptExtra(extra);
     if ( bool ) {
       result.assertLog.push({
-        ...extra,
+        extra: extra,
         status: 'passed',
         label: label
       })
       return bool
     }
     result.assertLog.push({
-      ...extra,
+      extra: extra,
       status: 'failed',
       label: label
     });
@@ -159,6 +159,7 @@ lib.all = () => {
           : '\x1B[31;1m-\x1B[0m'
           ;
         console.log('  | ' + mark + ' ' + entry.label);
+        if ( entry.status !== 'passed' ) console.log(entry.extra);
       })
     });
   });

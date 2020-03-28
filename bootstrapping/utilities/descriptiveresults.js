@@ -84,6 +84,7 @@ newResultContext_ = (o) => {
 var lib = newResultContext_();
 
 lib.isNegative = o => false
+  || o === false
   || o.status === 'unknown'
   || o.status === 'invalid'
   || o.status === 'defiant'
@@ -93,6 +94,7 @@ lib.isNegative = o => false
 lib.isFalsy = o => lib.isNegative(o) || o.status === 'empty';
 
 lib.isOK = o => false
+  || o === true
   || o.status === 'populated'
   || o.status === 'empty'
   ;

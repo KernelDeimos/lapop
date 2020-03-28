@@ -84,4 +84,19 @@ lib.assertData = (funcMap, type, data) => {
   return result;
 }
 
+lib.listEqual = (lis1, lis2) => {
+  if ( lis1.length != lis2.length ) return false;
+  for ( let i=0; i < lis1.length; i++ ) {
+    // TODO: recurse lists
+    if ( Array.isArray(lis1[i]) ) {
+      if ( ! Array.isArray(lis2[i]) ) return false;
+      return lib.listEqual(lis1[i], lis2[i]);
+    }
+    if ( lis1[i] !== lis2[i] ) {
+      return false;
+    }
+  }
+  return true;
+}
+
 module.exports = lib;
