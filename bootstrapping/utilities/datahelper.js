@@ -67,6 +67,7 @@ lib.processData = (funcMap, data) => {
   return dres.result({
     status: 'unknown',
     type: data[0],
+    subject: JSON.stringify(data),
     info: 'found an unrecognized type',
     infoParams: ['type']
   })
