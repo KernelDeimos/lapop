@@ -50,6 +50,20 @@ newResultContext_ = (o) => {
   ctx.apply = oNew => {
     ctx.baseValues = { ...ctx.baseValues, ...oNew };
   };
+  ctx.dress = resIn => {
+    let replaced = {};
+    for ( let k in ctx.baseValues ) {
+      if ( resIn.hasOwnProperty(k) ) {
+        replaced[k] = resIn[k];
+      }
+      resIn[k] = ctx.baseValues[k];
+    }
+    if ( resIn.hasOwnProperty('replaced') ) {
+      replaced.replaced = resIn.replaced;
+    }
+    resIn.replaced = replaced;
+    return resIn;
+  }
   ctx.result = oIn => {
     return newResult_({
       ...ctx.baseValues,
@@ -83,15 +97,21 @@ newResultContext_ = (o) => {
 
 var lib = newResultContext_();
 
+lib.isError = o => false
+  || o.status === 'invalid'
+  || o.status === 'internal'
+
 lib.isNegative = o => false
   || o === false
+  || lib.isError(o)
   || o.status === 'unknown'
-  || o.status === 'invalid'
   || o.status === 'defiant'
-  || o.status === 'internal'
   ;
 
-lib.isFalsy = o => lib.isNegative(o) || o.status === 'empty';
+lib.isNegativeOrEmpty = o => false
+  || lib.isNegative(o)
+  || o.status === 'empty'
+  ;
 
 lib.isOK = o => false
   || o === true

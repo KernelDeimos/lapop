@@ -5,7 +5,8 @@
 var testf = require('../testing/framework');
 var dres = require('../utilities/descriptiveresults');
 var dhelp = require('../utilities/datahelper');
-var parser = require('./parser');
+var parser = require('./primitives');
+var primitives = parser;
 
 testf.SET(
   'bootstrapping.parsing.parser.try_symbol',
@@ -168,6 +169,8 @@ testf.SET(
         t.assert('reports valid', dres.isOK(res));
         t.assert('contains expected value',
           dhelp.listEqual(['list', 'a','b','c'], res.value));
+        s = res.stream;
+        t.assert('advances stream', s.chr() === ' ');
       })
     });
     ts.CASE('parses mixed-value list', tc => {
@@ -204,6 +207,62 @@ testf.SET(
             ['assoc', 'a','b','c','d','e','f'],
             res.value));
       })
+    })
+  }
+);
+
+var memory = require('../interpreting/memory');
+
+var definitions = require('./definitions')(
+  memory.install_in_soup({})
+);
+
+testf.SET(
+  'bootstrapping.parsing.definitions',
+  ts => {
+    ts.CASE('can process definitions', tc => {
+      tc.RUN((t, d) => {
+        var s = primitives.newStream(`
+          def pattern __test__1__ [
+            [list]
+            [object]
+          ]
+        `, 0);
+        let res = definitions.process_definitions(s);
+        let received = memory.registry('pattern', '__test__1__').def;
+        let expected = [
+          ['list',
+            ['list', ['symbol','list']],
+            ['list', ['symbol','object']]]
+        ];
+        t.assert('correctly stores pattern definition', dhelp.listEqual(received, expected), {
+          expected: expected,
+          received: received,
+        });
+        s = primitives.newStream(`
+          def __test__1__ __test__2__ [a b c] {d e f g}
+        `, 0);
+        res = definitions.process_definitions(s);
+        if ( dres.isNegative(res) ) {
+          console.log(res);
+        }
+        received = memory.registry('__test__1__', '__test__2__').def;
+        expected = [
+          ['list',
+            ['symbol', 'a'],
+            ['symbol', 'b'],
+            ['symbol', 'c']],
+          ['assoc',
+            ['symbol', 'd'],
+            ['symbol', 'e'],
+            ['symbol', 'f'],
+            ['symbol', 'g']]
+        ];
+        t.assert('correctly stores custom definition', dhelp.listEqual(received, expected), {
+          expected: expected,
+          received: received,
+        });
+      });
     })
   }
 );

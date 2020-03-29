@@ -8,7 +8,7 @@ test.SET('bootstrapping.utilities.datahelper', ts => {
     tc.RUN((t, _) => {
       var res = dhelp.processData(null, input);
       if ( ! t.assert(
-        'assertData returns OK for expected type', dres.isOK(res)
+        'processData returns OK for expected type', dres.isOK(res)
       ) ) {
         console.log(res);
       }
@@ -23,7 +23,7 @@ test.SET('bootstrapping.utilities.datahelper', ts => {
       var res = dhelp.assertData(null, 'string', input);
       if ( ! t.assert(
         'assertData returns invalid for unexpected type',
-        dres.isFalsy(res) && res.status === 'invalid'
+        dres.isNegative(res) && res.status === 'invalid'
       ) ) {
         console.log(res);
       }

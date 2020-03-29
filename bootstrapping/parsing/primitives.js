@@ -270,5 +270,4 @@ var decorate_eofAsUnknown = (delegate) => (s) => {
 // lib.try_data = decorate_eofAsUnknown(lib.try_data);
 // lib.try_code = decorate_eofAsUnknown(lib.try_code);
 
-
 module.exports = lib;
