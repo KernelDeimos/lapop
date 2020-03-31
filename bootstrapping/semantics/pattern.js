@@ -67,7 +67,9 @@ lib.process_pattern = (config, pattern, s) => {
           return dresLocal.resInvalid('no patterns matched');
         }
       default:
-        let res = config.process_pattern_by_name(patternName, s);
+        let args = patternNode.slice(1);
+        let res = config.process_pattern_by_name(
+          patternName, args, s);
         if ( dres.isNegative(res) )
           return dres.unknownIsDefiant(res);
         items.push(...res.value);
@@ -76,6 +78,13 @@ lib.process_pattern = (config, pattern, s) => {
   }
 
   return dresLocal.resOK(items, { type: 'filling' })
+}
+
+lib.filling_to_tuple = (res) => {
+  if ( dres.resOK(res) ) {
+    res.value = ['tuple'].concat(res.value);
+  }
+  return res;
 }
 
 module.exports = lib;

@@ -132,7 +132,14 @@ lib.eat_whitespace = (s) => {
     })
 }
 
-lib.try_assoc = (s) => {
+lib.try_assoc_customized = (try_key, try_val, s) => {
+    if ( try_key === null ) {
+      try_key = lib.alt.bind(
+        lib.alt, [lib.try_string, lib.try_symbol]);
+    }
+    if ( try_val === null ) {
+      try_val = lib.try_any;
+    }
     if ( s.chr() != '{' ) {
         return dres.result({
             status: 'unknown',
@@ -152,7 +159,7 @@ lib.try_assoc = (s) => {
             break;
         }
 
-        let key = lib.alt([lib.try_string, lib.try_symbol], s);
+        let key = try_key(s);
         if ( dres.isNegative(key) ) return key;
         s = key.stream;
         s = lib.eat_whitespace(s).stream;
@@ -160,7 +167,7 @@ lib.try_assoc = (s) => {
             s = s.next();
             s = lib.eat_whitespace(s).stream;
         }
-        let value = lib.try_any(s);
+        let value = try_val(s);
         if ( dres.isNegative(value) ) return value;
         s = value.stream;
         s = lib.eat_whitespace(s).stream;
@@ -179,6 +186,9 @@ lib.try_assoc = (s) => {
         stream: s
     });
 }
+
+lib.try_assoc = lib.try_assoc_customized.bind(
+  lib.try_assoc_customized, null, null);
 
 lib.parse_list_tokens = (terminator, try_item, s) => {
     var items = [];

@@ -19,7 +19,7 @@ lib.newListStream = (list, index) => {
   return o;
 }
 
-lib.process_pattern_by_name = (name, s) => {
+lib.process_pattern_by_name = (name, args, s) => {
   var validateListType = (type) => {
     let res = dhelp.processData(null, s.val());
     if ( dres.isNegative(res) ) return res;
@@ -84,7 +84,7 @@ lib.newBlockExecutor = (configuration) => {
         case 'symbol':
           s = s.next();
           console.log(s);
-          let filling = lib.process_pattern_by_name(jsnode.value, s);
+          let filling = lib.process_pattern_by_name(jsnode.value, [], s);
           console.log('check:exSymbolFilling', filling);
           if ( dres.isNegative(filling) ) {
             console.log(filling);

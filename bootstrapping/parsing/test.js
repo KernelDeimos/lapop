@@ -216,6 +216,45 @@ var memory = require('../interpreting/memory');
 var definitions = require('./definitions')(
   memory.install_in_soup({})
 );
+var pattern = require('./pattern')(
+  memory.install_in_soup({})
+);
+
+testf.SET('bootstrapping.parsing.deep_patterns', ts => {
+  ts.CASE('assoc, deep pattern on value', tc => {
+    tc.RUN((t, d) => {
+      var s = primitives.newStream(
+        `{
+          a [a b] [c d]
+          c [e f] [g h]
+        }
+      `, 0);
+      let res = pattern.process_pattern_by_name(
+        'assoc', [
+          ['list',
+            ['list', ['symbol', 'list']],
+            ['list', ['symbol', 'list']]]
+        ],
+        s
+      );
+      t.assert('reports valid', dres.resOK(res));
+      let compareO = {
+        received: res.value,
+        expected: [ /* pattern array */ ['assoc',
+          ['symbol', 'a'], ['tuple',
+            ['list',['symbol','a'],['symbol','b']],
+            ['list',['symbol','c'],['symbol','d']]],
+          ['symbol', 'c'], ['tuple',
+            ['list',['symbol','e'],['symbol','f']],
+            ['list',['symbol','g'],['symbol','h']]]]
+        ]};
+      t.assert('reports expected value',
+        dhelp.listEqual(
+          compareO.expected, compareO.received
+        ), JSON.stringify(compareO));
+    });
+  });
+})
 
 testf.SET(
   'bootstrapping.parsing.definitions',

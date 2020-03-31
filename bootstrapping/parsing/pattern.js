@@ -7,7 +7,7 @@ var pattern = require('../semantics/pattern');
 var primitives = require('./primitives');
 
 lib.process_pattern = () => { throw new Error('NOOP') };
-lib.process_pattern_by_name = (name, s) => {
+lib.process_pattern_by_name = (name, args, s) => {
   let result;
   let dresFilling = dres.subContext({
     type: 'filling',
@@ -30,7 +30,23 @@ lib.process_pattern_by_name = (name, s) => {
       advance(result);
       return dresFilling.resOK( [ result.value ] );
     case 'object':
-      result = primitives.try_assoc(s);
+    case 'assoc': // alias
+      let try_key = primitives.alt.bind(
+        primitives.alt, [primitives.try_string, primitives.try_symbol]);
+      let try_val = primitives.try_any;
+      if ( Array.isArray(args) ) {
+        if ( args.length == 1 ) {
+          try_val = s_ => {
+            return pattern.filling_to_tuple(
+              lib.process_pattern(args[0], s_));
+          }
+        } else if ( args.length == 2 ) {
+          try_key = s_ => lib.process_pattern(args[0], s_);
+          if ( args[1] !== null )
+            try_val = s_ => lib.process_pattern(args[1], s_);
+        }
+      }
+      result = primitives.try_assoc_customized(try_key, try_val, s);
       if ( dres.isNegative(result) )
         return dres.unknownIsDefiant(result);
       advance(result);
@@ -50,14 +66,14 @@ lib.process_pattern_by_name = (name, s) => {
   }
 }
 
-lib.process_pattern = pattern.process_pattern.bind(
-  pattern.process_pattern, {
+lib.process_pattern = (pattern_, s) => {
+  return pattern.process_pattern({
     process_pattern_by_name: lib.process_pattern_by_name,
     onAdvance: state => {
       state.stream = primitives.eat_whitespace(state.stream).stream;
     }
-  }
-);
+  }, pattern_, s);
+};
 
 module.exports = soup_ => {
   soup = soup_;

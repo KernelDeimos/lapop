@@ -45,7 +45,7 @@ lib.try_def = (s) => {
     s = identifier.stream;
     s = primitives.eat_whitespace(s).stream;
 
-    let result = patternParsing.process_pattern_by_name(pattern.value[1], s);
+    let result = patternParsing.process_pattern_by_name(pattern.value[1], [], s);
     if ( dres.isNegative(result) ) {
       result.status = 'invalid';
       return result;
