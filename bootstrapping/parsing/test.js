@@ -100,6 +100,19 @@ testf.SET(
   }
 );
 
+testf.SET('bootstrapping.parsing.parser.try_float', ts => {
+  ts.CASE('123.456', tc => { tc.RUN((t, d) => {
+    let input = `123.456`;
+    let s = parser.newStream(input, 0);
+    let res = parser.try_float(s);
+    t.assert('reports valid', dres.resOK(res));
+    t.assert('reports correct value', true
+      && res.value[0] === 'float'
+      && res.value[1] === 123.456
+    );
+  })});
+});
+
 testf.SET(
   'bootstrapping.parsing.parser.alt',
   ts => {

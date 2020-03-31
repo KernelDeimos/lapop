@@ -95,6 +95,45 @@ lib.try_string = (s) => {
     })
 };
 
+lib.try_float = s => {
+  var isDigit = v => (v.charCodeAt(0)-48) < 10;
+  var isDecimal = v => v === '.';
+  var isBreak = v => [' ', '\n', '\r', '\t'].includes(v);
+  var isValid = v => isDigit(v) || isDecimal(v) || isBreak(v);
+
+  var total = 0;
+  var applyDigitIntegerPart = n => {
+    total = 10*total + n;
+  }
+  var fractionIndex_ = 1;
+  var applyDigitFractionPart = n => {
+    fractionIndex_ /= 10;
+    total += fractionIndex_*n;
+  }
+
+  var applyDigit = applyDigitIntegerPart;
+
+  for (
+    let ms = s.getReal();
+    !ms.eof() || isBreak(ms.chr());
+    ms.next()
+  ) {
+    let c = ms.chr();
+    if ( isDecimal(c) ) {
+      applyDigit = applyDigitFractionPart;
+      continue;
+    }
+    if ( ! isDigit(c) ) {
+      return dres.resInvalid('expected numeric digit (base 10)', {
+        stream: ms.getStuck(),
+      });
+    }
+    applyDigit(c.charCodeAt(0)-48);
+  }
+
+  return dres.resOK(['float', total]);
+}
+
 
 lib.alt = (options, s) => {
     var resultToReturn = dres.result({
