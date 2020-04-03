@@ -75,35 +75,54 @@ var newTestFunctionMap = config => {
   return { fmap: fmap, state: state };
 }
 
+var functionMapSetup = vars => {
+  vars.env = {};
+  var tmp = newTestFunctionMap(vars.env);
+  vars.state = tmp.state ;
+  vars.fmap  = tmp.fmap  ;
+}
+
 testf.SET('bootstrapping.interpreting.evaluators', ts => {
+  ts.SETUP(vars => {
+    functionMapSetup(vars);
+  })
   ts.CASE('standard evaluator evals code args', tc => {
     tc.RUN((t, d) => {
-      var testFmapConfig = {};
-      var testFmapTools = newTestFunctionMap(testFmapConfig);
-      var ev = evaluators.newStandardEvaluator(testFmapTools.fmap);
-      testFmapConfig.ev = ev;
-      ev(streams.newListStream([
+      d.env.ev = evaluators.newStandardEvaluator(d.fmap);
+      d.env.ev(streams.newListStream([
         ['symbol', 'callsEvaluatorIf'],
         ['code', ['symbol', 'returnsTrue']],
         ['list', ['symbol', 'setsA']]
       ], 0));
-      t.assert('second arg was evaluated',
-        testFmapTools.state.a);
+      t.assert('second arg was evaluated', d.state.a);
     });
   });
   ts.CASE('shallow evaluator does not eval code args', tc => {
     tc.RUN((t, d) => {
-      var testFmapConfig = {};
-      var testFmapTools = newTestFunctionMap(testFmapConfig);
-      var ev = evaluators.newShallowEvaluator(testFmapTools.fmap);
-      testFmapConfig.ev = ev;
-      ev(streams.newListStream([
+      d.env.ev = evaluators.newShallowEvaluator(d.fmap);
+      d.env.ev(streams.newListStream([
         ['symbol', 'callsEvaluatorIf'],
         ['code', ['symbol', 'returnsTrue']],
         ['list', ['symbol', 'setsA']]
       ], 0));
-      t.assert('second arg was not evaluated',
-        ! testFmapTools.state.a);
+      t.assert('second arg was not evaluated', ! d.state.a);
+    });
+  });
+});
+
+testf.SET('bootstrapping.interpreting.interpreter', ts => {
+  ts.SETUP(vars => {
+    functionMapSetup(vars);
+  })
+  ts.CASE('BlockExecutor evaluates list', tc => {
+    tc.RUN((t, d) => {
+      d.env.ev = evaluators.newStandardEvaluator(d.fmap);
+      d.env.ev(streams.newListStream([
+        ['symbol', 'callsEvaluatorIf'],
+        ['code', ['symbol', 'returnsTrue']],
+        ['list', ['symbol', 'setsA']]
+      ], 0));
+      t.assert('second arg was evaluated', d.state.a);
     });
   });
 });

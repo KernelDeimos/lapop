@@ -110,7 +110,7 @@ lib.runTestSet = testSet => {
     var testCase = testSet.cases[testCaseName];
     cvars = {...vars};
     testSet.setup(cvars);
-    var result = lib.runTestCase(testCase, vars);
+    var result = lib.runTestCase(testCase, cvars);
     setResult.caseResults[testCaseName] = result;
     setResult.caseResultsOrdered.push({
       name: testCaseName,
