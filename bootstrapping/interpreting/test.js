@@ -51,6 +51,64 @@ testf.SET(
   }
 )
 
+var newTestFunctionMap = config => {
+  var state = {
+    a: false,
+    b: false
+  };
+  var fmap = interpreter.newObjectFunctionMap({
+    returnsTrue: () => dres.resOK(true),
+    returnsFalse: () => dres.resOK(false),
+    callsEvaluatorIf: (args) => {
+      if ( dres.isOK(args[0]) && args[0].value === true ) {
+        config.ev(streams.newListStream(args[1].value, 0));
+      }
+    },
+    callsBlockExecutorIf: (args) => {
+      if ( dres.isOK(args[0]) && dres[0].value === true ) {
+        config.ev(streams.newListStream(args[1].value, 0));
+      }
+    },
+    setsA: () => state.a = true,
+    setsB: () => state.b = true,
+  });
+  return { fmap: fmap, state: state };
+}
+
+testf.SET('bootstrapping.interpreting.evaluators', ts => {
+  ts.CASE('standard evaluator evals code args', tc => {
+    tc.RUN((t, d) => {
+      var testFmapConfig = {};
+      var testFmapTools = newTestFunctionMap(testFmapConfig);
+      var ev = evaluators.newStandardEvaluator(testFmapTools.fmap);
+      testFmapConfig.ev = ev;
+      ev(streams.newListStream([
+        ['symbol', 'callsEvaluatorIf'],
+        ['code', ['symbol', 'returnsTrue']],
+        ['list', ['symbol', 'setsA']]
+      ], 0));
+      t.assert('second arg was evaluated',
+        testFmapTools.state.a);
+    });
+  });
+  ts.CASE('shallow evaluator does not eval code args', tc => {
+    tc.RUN((t, d) => {
+      var testFmapConfig = {};
+      var testFmapTools = newTestFunctionMap(testFmapConfig);
+      var ev = evaluators.newShallowEvaluator(testFmapTools.fmap);
+      testFmapConfig.ev = ev;
+      ev(streams.newListStream([
+        ['symbol', 'callsEvaluatorIf'],
+        ['code', ['symbol', 'returnsTrue']],
+        ['list', ['symbol', 'setsA']]
+      ], 0));
+      t.assert('second arg was not evaluated',
+        ! testFmapTools.state.a);
+    });
+  });
+});
+
+/*
 testf.SET(
   'bootstrapping.interpreting.interpreter.__evaluators__',
   ts => {
@@ -102,5 +160,6 @@ fmap.b = () => dres.resOK(2);
     });
   }
 )
+*/
 
 testf.all();
