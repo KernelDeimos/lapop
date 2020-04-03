@@ -4,20 +4,11 @@ var dres = require('../utilities/descriptiveresults');
 var dhelp = require('../utilities/datahelper');
 var util = require('../utilities/util');
 var pattern = require('../semantics/pattern');
+var streams = require('./streams');
 
 var soup;
 
 var lib = {};
-
-lib.newListStream = (list, index) => {
-  var o = {};
-  o.preview = list.slice(index);
-  o.eof = () => index >= list.length;
-  o.val = () => list[index];
-  o.rest = () => list.slice(index);
-  o.next = () => lib.newListStream(list, index+1);
-  return o;
-}
 
 lib.process_pattern_by_name = (name, args, s) => {
   var validateListType = (type) => {
@@ -59,6 +50,31 @@ lib.process_pattern = pattern.process_pattern.bind(
   }
 );
 
+lib.try_evaluatable = s => {
+  let jsnode = dhelp.processData(null, s.val());
+  if ( dres.isNegative(jsnode) ) return jsnode
+
+  switch ( jsnode.type ) {
+    case 'symbol':
+      s = s.next();
+      let filling = lib.process_pattern_by_name(jsnode.value, [], s);
+      if ( dres.isNegative(filling) ) {
+        return dres.resInvalid('no pattern for '+jsnode.value);
+      }
+      s = filling.stream;
+      return dres.resOK([
+        ['symbol', jsnode.value],
+        ...filling.value
+      ], {
+        type: 'code',
+        stream: s
+      });
+    case 'code':
+      jsnode.stream = s.next();
+      return jsnode;
+  }
+}
+
 lib.newBlockExecutor = (configuration) => {
   var params = util.jshelp.requireParams(configuration, [
     'resultHandler', 'evaluator'
@@ -75,91 +91,18 @@ lib.newBlockExecutor = (configuration) => {
       return;
     }
     while ( ! s.eof() ) {
-      let jsnode = dhelp.processData(null, s.val());
-      if ( dres.isNegative(jsnode) ) {
-        return jsnode;
+      let code = lib.try_evaluatable(s);
+      
+      if ( dres.isNegative(code) ) {
+        return code;
       }
-      let evalS, res;
-      switch ( jsnode.type ) {
-        case 'symbol':
-          s = s.next();
-          console.log(s);
-          let filling = lib.process_pattern_by_name(jsnode.value, [], s);
-          console.log('check:exSymbolFilling', filling);
-          if ( dres.isNegative(filling) ) {
-            console.log(filling);
-            return dres.resInvalid('no pattern for '+jsnode.value);
-          }
-          s = filling.stream;
-          evalS = lib.newListStream(
-            [
-              ['symbol', jsnode.value],
-              ...filling.value
-            ], 0);
-          res = evaluate(evalS);
-          if ( dres.isNegative(res) ) return res;
-          break;
-        case 'code':
-          console.log('uhh', JSON.stringify(jsnode));
-          evalS = lib.newListStream(
-            jsnode.value, 0);
-          res = evaluate(evalS);
-          debugger
-          if ( dres.isNegative(res) ) return res;
-          s = s.next();
-          break;
-      }
+
+      s = code.stream;
+      let evalS = streams.newListStream(code.value, 0);
+      
+      let res = evaluate(evalS);
     }
   }
-}
-
-lib.newFuncMapEvaluator = (funcMap) => {
-  var evl;
-  evl = (s) => {
-    if ( s.eof() ) {
-      throw new Error('EMPTY');
-    }
-    console.log({
-      a: s,
-      b: s.val(),
-      c: JSON.stringify(s)
-    });
-
-    var funcName;
-    if ( typeof s.val() === 'string' ) {
-      funcName = s.val();
-    } else {
-      let symbolNode = dhelp.processData(null, s.val());
-      if ( symbolNode.type !== 'symbol' ) {
-        throw new Error('expected symbol or string');
-      }
-      funcName = symbolNode.value;
-    }
-    var func = funcMap.get(funcName);
-
-    if ( dres.isNegative(func) ) {
-      // TODO: Use similar error handling as parser.js so that
-      //       more context can be added later
-      throw new Error(`Function '${func}' not recognized`);
-    }
-    var func = func.value;
-
-    var args = s.next().rest();
-
-    args.map(arg => {
-      arg = dhelp.processData(null, arg);
-      if ( arg.type === 'code' ) {
-        return evl(lib.newListStream(arg.value,0));
-      }
-      return arg;
-    });
-
-    console.log('AAAA');
-    var output = func(args);
-    console.log('BBBB');
-    return dres.resOK(output);
-  }
-  return evl;
 }
 
 lib.newObjectFunctionMap = o => {

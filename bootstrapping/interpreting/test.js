@@ -2,6 +2,8 @@ var testf = require('../testing/framework');
 var dres = require('../utilities/descriptiveresults');
 var dhelp = require('../utilities/datahelper');
 var memory = require('../interpreting/memory');
+var evaluators = require('./evaluators');
+var streams = require('./streams');
 
 var interpreter = require('./interpreter')(
   memory.install_in_soup({})
@@ -25,7 +27,7 @@ testf.SET(
           ['list',
             ['list', ['symbol', 'list']],
             ['list', ['symbol', 'list']]];
-        var s = interpreter.newListStream([
+        var s = streams.newListStream([
           ['list', 'a', 'b', 'c'],
           ['list', 'd', 'e', 'f'],
           ['list', 'g', 'e', 'f'],
@@ -67,37 +69,35 @@ testf.SET(
         var fmap = {};
         var logger = console.log;
         var ofmap = interpreter.newObjectFunctionMap(fmap);
-        var ev = interpreter.newFuncMapEvaluator(ofmap);
+        var ev = evaluators.newStandardEvaluator(ofmap);
         var ex = interpreter.newBlockExecutor({
           resultHandler: () => {},
           evaluator: ev,
         });
 
 fmap.if = args => {
-  if ( args[0] ) {
-    let code = dhelp.assertData(null, 'list', args[1]);
-    console.log("1!!!", code);
-    ex(interpreter.newListStream(code.value, 0));
+  if ( dres.isOK(args[0]) && args[0].value === true ) {
+    ex(streams.newListStream(args[1].value, 0));
   }
 }
-fmap.eq = (...args) => {
-  if ( args.length < 2 ) return true; // I suppose?
-  let previous = args[0];
+fmap.eq = args => {
+  if ( args.length < 2 ) return dres.resOK(true); // I suppose?
+  let previous = args[0].value;
   for ( let i=1; i < args.length; i++ ) {
-    if ( args[i] != previous ) return false;
-    previous = args[i];
+    if ( args[i].value != previous ) return dres.resOK(false);
+    previous = args[i].value;
   }
-  return true;
+  return dres.resOK(true);
 };
 fmap.log = (msg) => {
-  logger(...msg);
+  logger(msg[0].value);
 }
-fmap.a = () => 2;
-fmap.b = () => 2;
+fmap.a = () => dres.resOK(2);
+fmap.b = () => dres.resOK(2);
 
-        var s = interpreter.newListStream(inputBlock, 0);
-        console.log(s);
+        var s = streams.newListStream(inputBlock, 0);
         var result = ex(s);
+        console.log('result', result);
       })
     });
   }

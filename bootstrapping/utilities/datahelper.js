@@ -64,6 +64,10 @@ lib.processData = (funcMap, data) => {
     return result;
   }
 
+  if ( typeof data === 'string' ) return dres.resOK(data, {
+    type: 'string'
+  });
+
   return dres.result({
     status: 'unknown',
     type: data[0],
