@@ -4,6 +4,7 @@ var dhelp = require('../utilities/datahelper');
 var memory = require('../interpreting/memory');
 var evaluators = require('./evaluators');
 var streams = require('./streams');
+var fmaps = require('./functionmaps');
 
 var interpreter = require('./interpreter')(
   memory.install_in_soup({})
@@ -56,7 +57,7 @@ var newTestFunctionMap = config => {
     a: false,
     b: false
   };
-  var fmap = interpreter.newObjectFunctionMap({
+  var fmap = fmaps.newObjectFunctionMap({
     returnsTrue: () => dres.resOK(true),
     returnsFalse: () => dres.resOK(false),
     callsEvaluatorIf: (args) => {

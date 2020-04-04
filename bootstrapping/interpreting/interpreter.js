@@ -85,7 +85,6 @@ lib.newBlockExecutor = (configuration) => {
     return res;
   }
   return (s) => {
-    console.log(s);
     if ( s.eof() ) {
       console.warn('execution of empty code');
       return;
@@ -94,6 +93,7 @@ lib.newBlockExecutor = (configuration) => {
       let code = lib.try_evaluatable(s);
       
       if ( dres.isNegative(code) ) {
+        console.error(code, 'no function at', evalS.preview);
         return code;
       }
 
@@ -101,19 +101,14 @@ lib.newBlockExecutor = (configuration) => {
       let evalS = streams.newListStream(code.value, 0);
       
       let res = evaluate(evalS);
+      if ( dres.isNegative(res) ) {
+        // TODO: generate part of stack trace here
+        console.error(res, 'when evaluating', evalS.preview);
+        return res;
+      }
     }
+    return dres.resOK(null);
   }
-}
-
-lib.newObjectFunctionMap = o => {
-  var implementor = {};
-  implementor.get = name => {
-    if ( o.hasOwnProperty(name) ) {
-      return dres.resOK(o[name]);
-    }
-    return dres.result({ status: 'unknown' });
-  }
-  return implementor;
 }
 
 module.exports = soup_ => {
