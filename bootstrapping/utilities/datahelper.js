@@ -14,7 +14,7 @@ lib.fmap_convertData = {
    
     var assoc = [];
     for ( let i=0; i < data.length; i+=2 ) {
-      let k = data[i];
+      let k = lib.processData(lib.fmap_convertData, data[i]);
       let v = data[i+1];
       assoc.push({
         key: k,
@@ -29,12 +29,17 @@ lib.fmap_convertData = {
       }
     }
     methods.get = k => {
+      throw new Error(
+        'needs to be re-implemented using dres compare');
       for ( let j=0; j < assoc.length; j++ ) {
-        if ( assoc[j].key === k ) return dres.resOK(assoc[j].value);
+        if ( assoc[j].key.value === k )
+          return dres.resOK(assoc[j].value);
       }
     }
-    methods.keysInOrder = () => assoc.map(v => v.key);
+    methods.keysInOrder = () => assoc.map(v => v.key.value);
     methods.set = (k, v) => {
+      throw new Error(
+        'needs to be re-implemented using dres compare');
       for ( let j=0; j < assoc.length; j++ ) {
         if ( assoc[j].key === k ) {
           assoc[j].value = v;
@@ -77,6 +82,12 @@ lib.processData = (funcMap, data) => {
     info: 'found an unrecognized type',
     infoParams: ['type']
   })
+}
+
+lib.listifyData = processedData => {
+  if ( processedData.type === 'code' ) {
+    return ['code'].concat(data.value);
+  }
 }
 
 lib.assertData = (funcMap, type, data) => {

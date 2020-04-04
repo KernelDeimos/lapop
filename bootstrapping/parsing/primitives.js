@@ -34,7 +34,7 @@ lib.try_symbol = (s) => {
   }
   var isDigit = v => (true
     && v.charCodeAt(0)-48 < 10
-    && v.charCodeAt(0)-48 > 0
+    && v.charCodeAt(0)-48 >= 0
     );
   if ( isDigit(s.chr()) ) {
     return dres.result({
@@ -109,7 +109,7 @@ lib.try_string = (s) => {
 lib.try_float = s => {
   var isDigit = v => (true
     && v.charCodeAt(0)-48 < 10
-    && v.charCodeAt(0)-48 > 0
+    && v.charCodeAt(0)-48 >= 0
     );
   var isDecimal = v => v === '.';
   var isBreak = v => [
