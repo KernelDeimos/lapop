@@ -32,6 +32,17 @@ lib.try_symbol = (s) => {
       stream: s
     });
   }
+  var isDigit = v => (true
+    && v.charCodeAt(0)-48 < 10
+    && v.charCodeAt(0)-48 > 0
+    );
+  if ( isDigit(s.chr()) ) {
+    return dres.result({
+      status: 'unknown',
+      info: 'symbols don\'t start with digits',
+      stream: s
+    });
+  }
   var value = '';
   var ms = s.getReal();
   for ( ;
@@ -96,10 +107,23 @@ lib.try_string = (s) => {
 };
 
 lib.try_float = s => {
-  var isDigit = v => (v.charCodeAt(0)-48) < 10;
+  var isDigit = v => (true
+    && v.charCodeAt(0)-48 < 10
+    && v.charCodeAt(0)-48 > 0
+    );
   var isDecimal = v => v === '.';
-  var isBreak = v => [' ', '\n', '\r', '\t'].includes(v);
+  var isBreak = v => [
+    ' ', '\n', '\r', '\t',
+    '[', ']', '{', '}', '(', ')'
+  ].includes(v);
   var isValid = v => isDigit(v) || isDecimal(v) || isBreak(v);
+
+  if ( s.eof() || ! isDigit(s.chr()) ) {
+    return dres.result({
+      status: 'unknown',
+      stream: s
+    });
+  }
 
   var total = 0;
   var applyDigitIntegerPart = n => {
@@ -113,9 +137,10 @@ lib.try_float = s => {
 
   var applyDigit = applyDigitIntegerPart;
 
+  let ms = null;
   for (
-    let ms = s.getReal();
-    !ms.eof() || isBreak(ms.chr());
+    ms = s.getReal();
+    !ms.eof() && !isBreak(ms.chr());
     ms.next()
   ) {
     let c = ms.chr();
@@ -131,7 +156,9 @@ lib.try_float = s => {
     applyDigit(c.charCodeAt(0)-48);
   }
 
-  return dres.resOK(['float', total]);
+  return dres.resOK(['float', total], {
+    stream: ms.getStuck()
+  });
 }
 
 
@@ -281,6 +308,7 @@ lib.try_list = (begin, term, tryer, s) => {
 
 lib.try_any = (s) => {
     let result =  lib.alt([
+      lib.try_float,
       lib.try_string,
       lib.try_symbol,
       lib.try_assoc,
