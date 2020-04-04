@@ -50,15 +50,15 @@ a.process_definitions = (s) => {
 }
 
 a.create_sub_fmap = parent => {
-  let dotted = [];
-  let subDottedFmap = fmaps.newDottedCompositeFunctionMap(
-    dotted
-  )
   let object = {};
   let subObjectFmap = fmaps.newObjectFunctionMap(object);
+  let dotted = {};
+  let subDottedFmap = fmaps.newDottedCompositeFunctionMap(
+    dotted, subObjectFmap
+  )
 
   let subFmap = fmaps.newFallbackFunctionMap([
-    subDottedFmap, subObjectFmap, parent
+    subDottedFmap, parent
   ]);
 
   return {

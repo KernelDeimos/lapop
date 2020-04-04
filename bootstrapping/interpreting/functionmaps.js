@@ -6,16 +6,19 @@ var localUtil = {};
 localUtil.adaptObject = o => ( typeof o === 'undefined' ) ? {} : o;
 localUtil.adaptList = l => ( typeof l === 'undefined' ) ? [] : l;
 
-lib.newDottedCompositeFunctionMap = delegates => {
-  delegates = localUtil.adaptObject(delegates);
-
+lib.newDottedCompositeFunctionMap = (entries, delegate) => {
+  entries = localUtil.adaptObject(entries);
+  
   var implementor = {};
   implementor.get = name => {
     var dot = name.indexOf('.');
+    if ( dot === -1 ) {
+      return delegate.get(name);
+    }
     var remainder = name.slice(dot + 1);
     var name = name.slice(0, dot);
-    if ( delegates.hasOwnProperty(name) ) {
-      return delegates[name].get(remainder);
+    if ( entries.hasOwnProperty(name) ) {
+      return entries[name].get(remainder);
     }
     return dres.result({ status: 'unknown' });
   }
