@@ -79,17 +79,27 @@ lib.newBlockExecutor = (configuration) => {
   var params = util.jshelp.requireParams(configuration, [
     'resultHandler', 'evaluator'
   ]);
+  var api = {}; // for resultHandler
   var evaluate = input => {
     var res = params.evaluator(input);
-    params.resultHandler(res);
+    params.resultHandler(api, res);
     return res;
   }
+  let stopped = false;
+  let stopres = null;
+  api.stop = res => {
+    stopped = true;
+    stopres = res;
+  };
   return (s) => {
     if ( s.eof() ) {
       console.warn('execution of empty code');
       return;
     }
-    while ( ! s.eof() ) {
+    // setting `stopped` to false here will allow coroutines to be
+    // implemented in the future.
+    stopped = false;
+    while ( ! s.eof() && ! stopped ) {
       let code = lib.try_evaluatable(s);
       
       if ( dres.isNegative(code) ) {
@@ -107,6 +117,7 @@ lib.newBlockExecutor = (configuration) => {
         return res;
       }
     }
+    if ( stopped ) return stopres;
     return dres.resOK(null);
   }
 }
