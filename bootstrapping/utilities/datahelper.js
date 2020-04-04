@@ -6,6 +6,7 @@ lib.fmap_convertData = {
   list: data => dres.resOK(data),
   code: data => dres.resOK(data),
   symbol: data => dres.resOK(data.join('.')),
+  float: data => dres.resOK(data[0]),
   assoc: data => {
     if ( data.length % 2 !== 0 ) return dres.resInvalid(
         'associative array needs even number of elements'
@@ -29,9 +30,10 @@ lib.fmap_convertData = {
     }
     methods.get = k => {
       for ( let j=0; j < assoc.length; j++ ) {
-        if ( assoc[j].key === k ) return assoc[j].value;
+        if ( assoc[j].key === k ) return dres.resOK(assoc[j].value);
       }
     }
+    methods.keysInOrder = () => assoc.map(v => v.key);
     methods.set = (k, v) => {
       for ( let j=0; j < assoc.length; j++ ) {
         if ( assoc[j].key === k ) {
