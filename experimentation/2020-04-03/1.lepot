@@ -1,0 +1,27 @@
+def script testcursor [
+  (cursor.write text 'return ')
+  (cursor.write symbol (args 0))
+]
+
+def pattern while [
+  [list] [list]
+]
+
+def now A [
+  (lfun if {a _ b _} [
+    (while (a)
+      (append (b) (code [break])))
+  ])
+  (logger.info 'Hello!')
+  (lset i 0)
+  while [< (i) 10] [
+    (logger.info (i))
+    (lset i (+ (i) 1))
+  ]
+  (if [== (i) 0] [
+    (logger.info ':/ i was not set by loop')
+  ])
+  (if [== (i) 10] [
+    (logger.info ':D i was set by loop')
+  ])
+]
