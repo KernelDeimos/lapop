@@ -33,6 +33,10 @@ lib.newObjectFunctionMap = o => {
     }
     return dres.result({ status: 'unknown' });
   }
+  implementor.has = name => {
+    if ( o.hasOwnProperty(name) ) return o;
+    return null;
+  }
   return implementor;
 }
 

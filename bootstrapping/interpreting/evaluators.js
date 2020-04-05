@@ -34,7 +34,7 @@ lib.baseEvaluator_ = config => funcMap => {
 
     args = config.argFilter({ evaluate: evl }, args);
 
-    return func.value(args);
+    return func.value(args, config.context);
   }
   return evl;
 }
@@ -62,17 +62,22 @@ lib.createEvaluator = easyConfig => {
       });
     }
   }
-  return lib.baseEvaluator_({ argFilter: argFilter });
+  return lib.baseEvaluator_({
+    argFilter: argFilter,
+    context: easyConfig.context,
+  });
 }
 
-lib.newStandardEvaluator = funcMap => lib.createEvaluator({
+lib.newStandardEvaluator = (funcMap, context) => lib.createEvaluator({
   processArguments: true,
-  evaluateCodeArguments: true
+  evaluateCodeArguments: true,
+  context: context,
 })(funcMap);
 
-lib.newShallowEvaluator = funcMap => lib.createEvaluator({
+lib.newShallowEvaluator = (funcMap, context) => lib.createEvaluator({
   processArguments: true,
-  evaluateCodeArguments: false 
+  evaluateCodeArguments: false,
+  context: context,
 })(funcMap);
 
 module.exports = lib;

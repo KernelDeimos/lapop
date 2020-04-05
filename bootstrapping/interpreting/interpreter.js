@@ -31,10 +31,14 @@ lib.process_pattern_by_name = (name, args, s) => {
       return validateListType('list');
     default:
       let maybeDef = soup.registry('pattern', name);
-      if ( ! maybeDef.hasOwnProperty('def') ) {
+      if ( maybeDef.def === null ) {
         return dres.resInvalid(
           `pattern name "${name}" not recognized`,
           { stream: s });
+      }
+      if ( ! maybeDef.def ) {
+        console.warn('invalid definition detected for '+name,
+          maybeDef);
       }
       let result = lib.process_pattern(maybeDef.def[0], s);
       if ( dres.isNegative(result) ) {
@@ -103,7 +107,7 @@ lib.newBlockExecutor = (configuration) => {
       let code = lib.try_evaluatable(s);
       
       if ( dres.isNegative(code) ) {
-        console.error(code, 'no function at', evalS.preview);
+        console.error(code, 'no function at', s.preview);
         return code;
       }
 

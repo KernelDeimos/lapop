@@ -85,9 +85,9 @@ lib.processData = (funcMap, data) => {
 }
 
 lib.listifyData = processedData => {
-  if ( processedData.type === 'code' ) {
-    return ['code'].concat(data.value);
-  }
+  // Works for both list types and scalar types
+  // because concat has inconsistent behaviour.
+  return [processedData.type].concat(processedData.value);
 }
 
 lib.assertData = (funcMap, type, data) => {

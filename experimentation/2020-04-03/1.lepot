@@ -25,3 +25,15 @@ def now A [
     (logger.info ':D i was set by loop')
   ])
 ]
+
+def now B [
+  (logger.info (append [1 'a'] 3) )
+  (logger.info (+ 5 2))
+  (logger.info (* 5 2))
+  (logger.info (% 5 3))
+  (logger.info (!= 1 2))
+  (while [== 1 1] [
+    (logger.info 'A')
+    (break)
+  ])
+]
