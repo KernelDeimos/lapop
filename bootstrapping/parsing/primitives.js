@@ -91,7 +91,7 @@ lib.try_string = (s) => {
                 escaping = true;
                 continue;
             case escapeQuote:
-                return dres.resOK(value, {
+                return dres.resOK(['string', value], {
                     type: 'string',
                     escapeQuote: escapeQuote,
                     stream: ms.getStuck().next()

@@ -57,7 +57,7 @@ testf.SET(
 testf.SET(
   'bootstrapping.parsing.parser.try_string',
   ts => {
-    ts.CASE('parses valid symbols', tc => {
+    ts.CASE('parses valid strings', tc => {
       tc.RUN((t, d) => {
         let inputs = {}
         inputs[`"double-quoted string"`]=`double-quoted string`;
@@ -74,7 +74,7 @@ testf.SET(
           t.assert(input + ' is considered valid', dres.isOK(res));
           t.assert(
             input + ' has correct value',
-            res.value === inputs[input],
+            res.value[1] === inputs[input],
             {
               expected: inputs[input],
               received: res.value
@@ -83,7 +83,7 @@ testf.SET(
         }
       })
     })
-    ts.CASE('rejects invalid symbols', tc => {
+    ts.CASE('rejects invalid strings', tc => {
       tc.RUN((t, d) => {
         let cases = [
           ['isSymbol', 'unknown'],
@@ -165,7 +165,11 @@ testf.SET(
           parser.try_string, s);
         t.assert('reports valid', dres.isOK(res));
         t.assert('contains expected value',
-          dhelp.listEqual(['a','b','c'], res.value));
+          dhelp.listEqual([
+            ['string', 'a'],
+            ['string', 'b'],
+            ['string', 'c']
+          ], res.value));
       })
     })
   }
@@ -181,7 +185,11 @@ testf.SET(
         let res = parser.try_data(s);
         t.assert('reports valid', dres.isOK(res));
         t.assert('contains expected value',
-          dhelp.listEqual(['list', 'a','b','c'], res.value));
+          dhelp.listEqual(['list',
+            ['string', 'a'],
+            ['string', 'b'],
+            ['string', 'c'],
+          ], res.value));
         s = res.stream;
         t.assert('advances stream', s.chr() === ' ');
       })
@@ -195,8 +203,8 @@ testf.SET(
         t.assert('contains expected value',
           dhelp.listEqual(
             ['list',
-              'a',
-              ['assoc',['symbol','b'],'c'],
+              ['string', 'a'],
+              ['assoc',['symbol','b'],['string','c']],
               ['symbol','d']],
             res.value),
             res
@@ -217,7 +225,9 @@ testf.SET(
         t.assert('reports valid', dres.isOK(res));
         t.assert('contains expected value',
           dhelp.listEqual(
-            ['assoc', 'a','b','c','d','e','f'],
+            ['assoc', ...['a','b','c','d','e','f'].map(
+              v => ['string', v])
+            ],
             res.value));
       })
     })

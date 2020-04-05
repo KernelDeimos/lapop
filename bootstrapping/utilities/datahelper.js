@@ -7,6 +7,7 @@ lib.fmap_convertData = {
   code: data => dres.resOK(data),
   symbol: data => dres.resOK(data.join('.')),
   float: data => dres.resOK(data[0]),
+  string: data => dres.resOK(data[0]),
   assoc: data => {
     if ( data.length % 2 !== 0 ) return dres.resInvalid(
         'associative array needs even number of elements'
@@ -70,10 +71,6 @@ lib.processData = (funcMap, data) => {
     if ( dres.isOK(result) ) result.type = data[0];
     return result;
   }
-
-  if ( typeof data === 'string' ) return dres.resOK(data, {
-    type: 'string'
-  });
 
   return dres.result({
     status: 'unknown',
