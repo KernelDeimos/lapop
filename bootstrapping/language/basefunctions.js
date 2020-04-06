@@ -131,6 +131,16 @@ lib.boolean['!='] = (args, context) => {
   return res;
 }
 
+lib.boolean['<'] = localUtil.newFunc((args, context) => {
+  if ( args.length < 1 ) return dres.resOK(true); // I guess??
+  let prev = args[0];
+  let rest = args.slice(1)
+  for ( let i=0; i < rest.length; i++ ) {
+    if ( prev.value >= rest[i].value ) return dres.resOK(false);
+  }
+  return dres.resOK(true);
+}, localUtil.newVariadicValidator('float'));
+
 lib.lists = {};
 lib.lists['append'] = localUtil.newFunc((args, context) => {
   let l = [].concat(args[0].value);
