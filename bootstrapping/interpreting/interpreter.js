@@ -16,7 +16,7 @@ lib.process_pattern_by_name = (name, args, s) => {
     if ( dres.isNegative(res) ) return res;
     if ( res.type !== type ) return dres.result({
       status: 'defiant', 
-      value: result,
+      value: res.value,
       stream: s
     });
     return dres.resOK([ s.val() ], {
@@ -63,6 +63,10 @@ lib.try_evaluatable = s => {
       s = s.next();
       let filling = lib.process_pattern_by_name(jsnode.value, [], s);
       if ( dres.isNegative(filling) ) {
+        if ( filling.status === 'defiant' ) {
+          return dres.resInvalid(
+            'defiant filling for '+jsnode.value);
+        }
         return dres.resInvalid('no pattern for '+jsnode.value);
       }
       s = filling.stream;
