@@ -40,8 +40,7 @@ def now B [
   (:= i 0)
   (while [< (i) 10] [
     (= a 'cheese')
-    (logger.info (i))
-    (= i (+ (i) 1))
+    (logger.info (i) '->' (+p i))
   ])
   (logger.info (a))
 ]

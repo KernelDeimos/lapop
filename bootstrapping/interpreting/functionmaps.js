@@ -10,6 +10,7 @@ lib.newFuncMapNodeAPIFromObject = (o, name) => {
   return {
     getObject_: () => o,
     getKey_: () => name,
+    call: (args, ctx) => o[name](args, ctx),
     get: () => o[name],
     replace: nw => o[name] = nw,
     remove: () => delete o[name],

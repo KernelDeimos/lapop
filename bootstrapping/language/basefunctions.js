@@ -59,7 +59,7 @@ localUtil.varEq = (start, sym) => `
   let v = ${start};
   for ( let i=0; i < argc; i++ ) { v ${sym} arg(i); }
   return v;
-`
+`;
 
 lib.arithmetic = {};
 
@@ -93,6 +93,31 @@ lib.variable['='] = localUtil.newFunc((args, context) => {
     return dres.resInvalid(`attempt to set undefined variable "${name}"`);
   fmapNodeAPI.replace(fNew);
 }, localUtil.newListValidator(['symbol','ignore']));
+
+var varOp = (op, isPost) => (args, context) => {
+  let name = args[0].value;
+  let fmapNodeAPI = context.getOwner(name);
+  if ( fmapNodeAPI === null )
+    return dres.resInvalid(`attempt to post-increment undefined variable "${name}"`);
+  let node = fmapNodeAPI.call([], context);
+  let newNode = {...node, value: op(node.value)};
+  let fNew = fargs => { return newNode; };
+  fmapNodeAPI.replace(fNew);
+  return dres.resOK(isPost ? node.value : newNode.value);
+};
+
+lib.variable['++'] = localUtil.newFunc(
+  varOp(v => v + 1, true),
+  localUtil.newListValidator(['symbol']));
+lib.variable['+p'] = localUtil.newFunc(
+  varOp(v => v + 1, false),
+  localUtil.newListValidator(['symbol']));
+lib.variable['--'] = localUtil.newFunc(
+  varOp(v => v - 1, true),
+  localUtil.newListValidator(['symbol']));
+lib.variable['-p'] = localUtil.newFunc(
+  varOp(v => v - 1, false),
+  localUtil.newListValidator(['symbol']));
 
 lib.boolean = {};
 lib.boolean['=='] = localUtil.newFunc((args, context) => {
