@@ -9,6 +9,9 @@ lib.process_pattern = (config, pattern, s) => {
     stream: s
   });
   let advance = result => {
+    if ( result.stream === undefined ) {
+      throw new Error('no stream: ' + JSON.stringify(result));
+    }
     s = result.stream;
     if ( typeof config.onAdvance !== 'undefined' ) {
       let o = { stream: s };
@@ -66,12 +69,15 @@ lib.process_pattern = (config, pattern, s) => {
         if ( ! success ) {
           return dresLocal.resInvalid('no patterns matched');
         }
+        break;
       default:
         let args = patternNode.slice(1);
         let res = config.process_pattern_by_name(
           patternName, args, s);
-        if ( dres.isNegative(res) )
+        if ( dres.isNegative(res) ) {
+          res.info = `while processing ${patternName}: ${res.info}`;
           return dres.unknownIsDefiant(res);
+        }
         items.push(...res.value);
         advance(res);
     }

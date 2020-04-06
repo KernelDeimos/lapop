@@ -76,8 +76,9 @@ lib.processData = (funcMap, data) => {
     status: 'unknown',
     type: data[0],
     subject: JSON.stringify(data),
-    info: 'found an unrecognized type',
-    infoParams: ['type']
+    info: 'found an unrecognized type: '+data[0],
+    infoParams: ['type'],
+    stack: (new Error()).stack
   })
 }
 

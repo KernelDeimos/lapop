@@ -11,41 +11,45 @@ var soup;
 var lib = {};
 
 lib.process_pattern_by_name = (name, args, s) => {
-  var validateListType = (type) => {
+  let res = dhelp.processData(null, s.val());
+  if ( dres.isNegative(res) ) return res;
+  let primitives = [
+    'assoc', 'list', 'code', 'string', 'symbol', 'float'
+  ];
+  let aliases = {
+    'object': 'assoc'
+  }
+  if ( name in aliases ) name = aliases[name];
+
+  if ( primitives.includes(name) ) {
     let res = dhelp.processData(null, s.val());
     if ( dres.isNegative(res) ) return res;
-    if ( res.type !== type ) return dres.result({
+    if ( res.type !== name ) return dres.result({
       status: 'defiant', 
       value: res.value,
       stream: s
     });
     return dres.resOK([ s.val() ], {
-      type: type,
+      type: res.type,
       stream: s.next()
     });
   }
-  switch ( name ) {
-    case 'code':
-      return validateListType('code');
-    case 'list':
-      return validateListType('list');
-    default:
-      let maybeDef = soup.registry('pattern', name);
-      if ( maybeDef.def === null ) {
-        return dres.resInvalid(
-          `pattern name "${name}" not recognized`,
-          { stream: s });
-      }
-      if ( ! maybeDef.def ) {
-        console.warn('invalid definition detected for '+name,
-          maybeDef);
-      }
-      let result = lib.process_pattern(maybeDef.def[0], s);
-      if ( dres.isNegative(result) ) {
-        return dres.unknownIsDefiant(result);
-      }
-      return result
+
+  let maybeDef = soup.registry('pattern', name);
+  if ( maybeDef.def === null ) {
+    return dres.resInvalid(
+      `pattern name "${name}" not recognized`,
+      { stream: s });
   }
+  if ( ! maybeDef.def ) {
+    console.warn('invalid definition detected for '+name,
+      maybeDef);
+  }
+  let result = lib.process_pattern(maybeDef.def[0], s);
+  if ( dres.isNegative(result) ) {
+    return dres.unknownIsDefiant(result);
+  }
+  return result
 }
 
 lib.process_pattern = pattern.process_pattern.bind(
@@ -65,9 +69,15 @@ lib.try_evaluatable = s => {
       if ( dres.isNegative(filling) ) {
         if ( filling.status === 'defiant' ) {
           return dres.resInvalid(
-            'defiant filling for '+jsnode.value);
+            'defiant filling for '+jsnode.value,
+            {
+              cause: filling
+            }
+          );
         }
-        return dres.resInvalid('no pattern for '+jsnode.value);
+        return dres.resInvalid('no pattern for '+jsnode.value, {
+          cause: filling
+        });
       }
       s = filling.stream;
       return dres.resOK([
