@@ -49,6 +49,10 @@ lib.newContextAPI = (internal, context) => {
   api.callResultHandler = function () {
     internal.resultHandler(...arguments);
   }
+  api.getOwner = name => {
+    let res = internal.fmap.has(name)
+    return res;
+  }
   api.ev = internal.ev;
   api.ex = internal.ex;
 

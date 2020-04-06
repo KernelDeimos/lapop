@@ -76,6 +76,24 @@ lib.arithmetic = {};
     { type: 'float' });
 });
 
+lib.variable = {};
+
+lib.variable[':='] = localUtil.newFunc((args, context) => {
+  let o = {};
+  o[args[0].value] = fargs => { return args[1]; };
+  context.registerObject(o);
+}, localUtil.newListValidator(['symbol','ignore']));
+
+lib.variable['='] = localUtil.newFunc((args, context) => {
+  let o = {};
+  let name = args[0].value;
+  let fNew = fargs => { return args[1]; };
+  let fmapNodeAPI = context.getOwner(name);
+  if ( fmapNodeAPI === null )
+    return dres.resInvalid(`attempt to set undefined variable "${name}"`);
+  fmapNodeAPI.replace(fNew);
+}, localUtil.newListValidator(['symbol','ignore']));
+
 lib.boolean = {};
 lib.boolean['=='] = localUtil.newFunc((args, context) => {
   if ( args.length < 1 ) return dres.resOK(true); // I guess??
@@ -168,6 +186,7 @@ lib.install = api => {
   api.registerObject(lib.lists);
   api.registerObject(lib.boolean);
   api.registerObject(lib.controlflow);
+  api.registerObject(lib.variable);
 }
 
 module.exports = lib;
