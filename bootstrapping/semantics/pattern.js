@@ -67,7 +67,10 @@ lib.process_pattern = (config, pattern, s) => {
           break;
         }
         if ( ! success ) {
-          return dresLocal.resInvalid('no patterns matched');
+          return dresLocal.result({
+            status: 'defiant',
+            info: 'no patterns matched'
+          });
         }
         break;
       default:
