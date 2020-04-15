@@ -175,7 +175,6 @@ newBlockExecutor = (configuration) => {
           evaluate(evalS);
           break;
         case 'code':
-          console.log('uhh', JSON.stringify(jsnode));
           evalS = newListStream(
             jsnode.value, 0);
           evaluate(evalS);

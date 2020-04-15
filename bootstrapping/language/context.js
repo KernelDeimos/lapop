@@ -97,9 +97,6 @@ lib.newStandardExecutionContext = () => {
     resultHandler: rh,
     parentFmap: defFuncMap,
   });
-  console.log('uhhhhh');
-  console.log(contextAPI);
-  console.log(defFuncMap);
 
   basefunctions.install(contextAPI);
   stdlib.install(contextAPI);

@@ -91,6 +91,10 @@ lib.variable[':'] = localUtil.newFunc((args, context) => {
   context.registerMap('', o);
 }, localUtil.newListValidator(['symbol','ignore']));
 
+lib.variable[':o'] = localUtil.newFunc((args, context) => {
+  context.registerMap(args[0].value, args[1].value);
+}, localUtil.newListValidator(['symbol','ignore']));
+
 lib.variable[':fn'] = localUtil.newFunc((args, context) => {
   let o = {};
   o[args[0].value] = fargs => {
