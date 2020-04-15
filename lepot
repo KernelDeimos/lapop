@@ -78,6 +78,16 @@ lib.badREPL = (start, end) => {
 
   var buffer = "";
 
+  lib.execStream(primitives.newStream(`
+    def script main [
+      (logger.notice '')
+      (logger.notice 'You are in REPL mode!')
+      (logger.notice 'Enter on an empty line to call the executor.')
+      (logger.notice 'Press Ctrl+D (EOF) to exit.')
+      (logger.notice 'The !HELP command will show REPL commands.')
+    ]
+  `, 0));
+
   rl.on('line', function(line){
     if ( line === "" ) {
       let res = lib.execStream(primitives.newStream(
@@ -93,13 +103,16 @@ lib.badREPL = (start, end) => {
       console.log(replPre+'QUITTING');
       rl.close();
     }
-    else if ( line.startsWith('!WRITE') ) {
+    else if ( line.startsWith('!COPY') ) {
       let parts = line.split(' ');
       let data = fs.readFileSync(parts[1]);
       buffer += data.toString();
     }
     else if ( line === '!SHOW' ) {
       console.log(rewrite(buffer));
+    }
+    else if ( line === '!CLEAR' ) {
+      buffer = "";
     }
     else if ( line === '!WHY' ) {
       console.log(
@@ -109,6 +122,19 @@ lib.badREPL = (start, end) => {
         '\n' +
         '      λ Y'
         );
+    }
+    else if ( line === '!HELP' ) {
+      let t = '      ';
+      console.log(replPre+' === REPL COMMANDS ===\n' +
+      t+`!CODE  - toggle "script mode". If script mode is ON then\n` +
+      t+`         code is wrapped in "def script main [...]"\n` +
+      t+`!EXIT  - Alternative command to exit REPL.\n` +
+      t+`!COPY <filename>\n` +
+      t+`       - copies a file's contents into the REPL buffer\n` +
+      t+`         as though you typed it yourself.\n` +
+      t+`!SHOW  - Show buffer contents\n` +
+      t+`!CLEAR - Clear buffer contents\n` +
+      t+`!WHY   - This is another REPL command that exists` );
     }
     else {
       buffer += line;
