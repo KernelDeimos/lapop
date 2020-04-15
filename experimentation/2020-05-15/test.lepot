@@ -1,0 +1,3 @@
+def script main [
+  (logger.info 'hello')
+]

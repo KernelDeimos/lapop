@@ -64,4 +64,7 @@ def now B [
   (if [< (b) (a)] [
     (logger.info 'Yay!')
   ])
+  (logger.dump (fs.new))
+  (:o myfs (fs.new))
+  (myfs.SayHiToRuntime)
 ]

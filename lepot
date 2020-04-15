@@ -1,0 +1,125 @@
+#!/usr/local/bin/node
+'use strict';
+const fs = require('fs');
+
+var memory = require(
+  './bootstrapping/interpreting/memory');
+var interpreter = require(
+  './bootstrapping/interpreting/interpreter')({
+    registry: memory.registry });
+var streams = require(
+  './bootstrapping/interpreting/streams');
+var evaluators = require(
+  './bootstrapping/interpreting/evaluators');
+var definitions = require(
+  './bootstrapping/parsing/definitions')({
+    registry: memory.registry });
+var primitives = require(
+  './bootstrapping/parsing/primitives');
+var dres   = require(
+  './bootstrapping/utilities/descriptiveresults');
+var dhelp  = require(
+  './bootstrapping/utilities/datahelper');
+var fmaps  = require(
+  './bootstrapping/interpreting/functionmaps');
+var context  = require(
+  './bootstrapping/language/context');
+
+var codePattern = [['list',['list', ['symbol', 'list']]]];
+memory.registry('pattern', 'script').def = codePattern;
+memory.registry('pattern', 'now').def = codePattern;
+
+var lib = {};
+
+var root = context.newStandardExecutionContext();
+lib.exec = null;
+
+lib.execStream = (s) => {
+    // Script is allowed to begin with whitespace
+    s = primitives.eat_whitespace(s).stream;
+
+    while ( ! s.eof() ) {
+        let result = definitions.try_def(s);
+        s = result.stream;
+        if ( dres.isNegative(result) ) {
+            return result;
+        }
+        memory.registry(result.of, result.for).def = result.value;
+        if ( result.of === 'script' && result.for === 'main' ) {
+          let lis = dhelp.processData(null, result.value[0]);
+          root.execBlockHere(lis);
+        }
+        s = primitives.eat_whitespace(s).stream;
+    }
+
+    return dres.resOK();
+}
+
+
+lib.load = filename => {
+  var data = fs.readFileSync(filename);
+  var res = lib.execStream(primitives.newStream(
+    data.toString(), 0));
+}
+
+lib.badREPL = (start, end) => {
+  var replPre = "\x1B[36;1m|REPL|\x1B[0m ";
+  var readline = require('readline');
+  var rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    terminal: false
+  });
+
+  var start = `def script main [\n`;
+  var end = `]\n`;
+  var codeMode = false;
+  var rewrite = buf => codeMode ? start+buf+end : buf;
+
+  var buffer = "";
+
+  rl.on('line', function(line){
+    if ( line === "" ) {
+      let res = lib.execStream(primitives.newStream(
+        rewrite(buffer), 0));
+      console.log('> ' + res);
+      buffer = "";
+    }
+    else if ( line === '!CODE' ) {
+      codeMode = !codeMode;
+      console.log(replPre+'SCRIPT MODE '+(codeMode ? 'ON' : 'OFF'));
+    }
+    else if ( line === '!EXIT') {
+      console.log(replPre+'QUITTING');
+      rl.close();
+    }
+    else if ( line.startsWith('!WRITE') ) {
+      let parts = line.split(' ');
+      let data = fs.readFileSync(parts[1]);
+      buffer += data.toString();
+    }
+    else if ( line === '!SHOW' ) {
+      console.log(rewrite(buffer));
+    }
+    else if ( line === '!WHY' ) {
+      console.log(
+        '\x1B[33;1mW   \x1B[36;1mY     \x1B[32;1m' +
+        '\x1B[31;1mN   \x1B[35mT\n  \x1B[34mH    ' +
+        '     \x1B[33;1mO\x1B[0m' +
+        '\n' +
+        '      λ Y'
+        );
+    }
+    else {
+      buffer += line;
+    }
+  })
+};
+
+var args = process.argv.slice(2);
+
+if ( args.length > 0 ) {
+  lib.load(args[0]);
+} else {
+  lib.badREPL();
+}
