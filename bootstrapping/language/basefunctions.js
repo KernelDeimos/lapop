@@ -20,16 +20,16 @@ localUtil.validateType = (dresValue, typ) => {
 }
 
 // TODO: these validators need to support pattern identifiers
-localUtil.newVariadicValidator = typ => index => arg =>
+localUtil.newVariadicValidator = (typ, fname) => index => arg =>
   ( arg.type === typ ) ? dres.resOK(null) : dres.resInvalid(
-    `expected type "${typ}"`);
-localUtil.newListValidator = types => i => arg =>
+    `${fname} expected type "${typ}", got "${arg.type}"`);
+localUtil.newListValidator = (types, fname) => i => arg =>
   ( types[i] === 'ignore' )
   ? dres.resOK(null)
   : ( arg.type === types[i] )
     ? dres.resOK(null)
     : dres.resInvalid(
-      `expected type "${types[i]}" but got "${arg.type}"`);
+      `${fname} expected type "${types[i]}" but got "${arg.type}"`);
 
 localUtil.newFunc = (f, validation) => (args, context) => {
   for ( let i=0; i < args.length; i++ ) {
@@ -88,7 +88,7 @@ lib.variable = {};
 lib.variable[':'] = localUtil.newFunc((args, context) => {
   let o = {};
   o[args[0].value] = fargs => { return args[1]; };
-  context.registerObject(o);
+  context.registerMap('', o);
 }, localUtil.newListValidator(['symbol','ignore']));
 
 lib.variable[':fn'] = localUtil.newFunc((args, context) => {
@@ -105,7 +105,7 @@ lib.variable[':fn'] = localUtil.newFunc((args, context) => {
         context.callResultHandler(api, res);
       }
     });
-    sub.registerObject({
+    sub.registerMap('', {
       "return": () => {
         return dres.result({ status: 'populated', type: 'return' });
       }
@@ -115,10 +115,11 @@ lib.variable[':fn'] = localUtil.newFunc((args, context) => {
     for ( let i=0; i < argNames.length; i++ ) {
       argsFmapObj[argNames[i]] = () => fargs[i];
     }
-    sub.registerObject(argsFmapObj);
+    // ERROR HERE?
+    sub.registerMap('', argsFmapObj);
     return sub.ex(streams.newListStream(args[2].value, 0));
   };
-  context.registerObject(o);
+  context.registerMap('', o);
 }, localUtil.newListValidator(['symbol', 'assoc', 'list']));
 
 lib.variable['='] = localUtil.newFunc((args, context) => {
@@ -201,7 +202,7 @@ lib.boolean['<'] = localUtil.newFunc((args, context) => {
     if ( prev.value >= rest[i].value ) return dres.resOK(false);
   }
   return dres.resOK(true);
-}, localUtil.newVariadicValidator('float'));
+}, localUtil.newVariadicValidator('float', '<'));
 
 lib.lists = {};
 lib.lists['append'] = localUtil.newFunc((args, context) => {
@@ -231,7 +232,7 @@ lib.controlflow.while = (args, ctx) => {
       ctx.callResultHandler(api, res);
     }
   });
-  sub.registerObject({
+  sub.registerMap('', {
     "break": () => {
       return dres.result({ status: 'populated', type: 'break' });
     }
@@ -253,6 +254,11 @@ lib.logger = {
       ...args.map(a => a.value));
     return dres.resOK(null);
   }, null),
+  'dump': (args, ctx) => {
+    console.log('\x1B[37;1m[dump]\x1B[0m',
+      ...args.map(a => a));
+    return dres.resOK(null);
+  },
   'notice': localUtil.newFunc(args => {
     console.log('\x1B[37;1m|====|\x1B[0m',
       ...args.map(a => a.value));
@@ -266,17 +272,17 @@ lib.logger = {
 }
 
 lib.installLogger = api => {
-  api.registerDotted('logger', api.object(lib.logger))
+  api.registerMap('logger', lib.logger);
 }
 
 lib.install = api => {
   lib.installLogger(api);
-  api.registerObject(lib.arithmetic);
-  api.registerObject(lib.lists);
-  api.registerObject(lib.boolean);
-  api.registerObject(lib.controlflow);
-  api.registerObject(lib.variable);
-  api.registerObject(lib.conv);
+  api.registerMap('', lib.arithmetic);
+  api.registerMap('', lib.lists);
+  api.registerMap('', lib.boolean);
+  api.registerMap('', lib.controlflow);
+  api.registerMap('', lib.variable);
+  api.registerMap('', lib.conv);
 
   let install_script = (s) => {
       // Script is allowed to begin with whitespace
@@ -314,8 +320,8 @@ lib.install = api => {
       (logger.notice 'Copyright (C) 2020 Eric Dube')
     ]
     def bootscript if [
-      :fn if {a _ b _} [
-        (while (a) (append (b) (code [break])))
+      :fn if {a__ _ b__ _} [
+        (while (a__) (append (b__) (code [break])))
       ]
     ]
   `, 0));

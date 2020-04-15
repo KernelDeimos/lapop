@@ -43,9 +43,25 @@ def now B [
   (logger.info (!= 2 2))
   (logger.info (!= 1 2))
   : i 0
+  : x 10
+  (if [< (i) (x)] [
+    = a 'cheese'
+    (logger.info (i) '-,' (+p i))
+  ])
   while [< (i) 10] [
     = a 'cheese'
     (logger.info (i) '->' (+p i))
   ]
   (logger.info (a))
+
+  : a 5
+  : b 2
+  (logger.dump (a))
+  (logger.dump (b))
+  (if [< (a) (b)] [
+    (logger.info 'the interpreter is broken')
+  ])
+  (if [< (b) (a)] [
+    (logger.info 'Yay!')
+  ])
 ]

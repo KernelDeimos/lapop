@@ -5,6 +5,7 @@ var memory = require('../interpreting/memory');
 var evaluators = require('./evaluators');
 var streams = require('./streams');
 var fmaps = require('./functionmaps');
+var dottedfuncmap = require('./dottedfmap');
 
 var interpreter = require('./interpreter')(
   memory.install_in_soup({})
@@ -124,6 +125,92 @@ testf.SET('bootstrapping.interpreting.interpreter', ts => {
         ['list', ['symbol', 'setsA']]
       ], 0));
       t.assert('second arg was evaluated', d.state.a);
+    });
+  });
+});
+
+testf.SET('bootstrapping.intterpreting.dottedfuncmap', ts => {
+  var setupTeardownCommon = d => {
+    d.itWorked = false;
+    d.notThisOne = false;
+    d.butThisOne = false;
+  }
+  ts.SETUP(d => {
+    d.fmap = dottedfuncmap.newDottedFunctionMap();
+    setupTeardownCommon(d);
+  });
+  ts.TEARDOWN(d => {
+    setupTeardownCommon(d);
+  });
+  ts.CASE('dotted function map works (typical case)', tc => {
+    tc.RUN((t, d) => {
+      d.fmap.register('a.b.c.setItWorked', (args, ctx) => {
+        d.itWorked = true;
+      });
+      var resF = d.fmap.get('a.b.c.setItWorked');
+      if (t.assert('function exists', resF.status === 'populated')) {
+        resF.value();
+      }
+      t.assert('function was called', d.itWorked);
+    });
+  });
+  ts.CASE('dotted function map works (root package)', tc => {
+    tc.RUN((t, d) => {
+      d.fmap.register('setItWorked', (args, ctx) => {
+        d.itWorked = true;
+      });
+      var resF = d.fmap.get('setItWorked');
+      if (t.assert('function exists', resF.status === 'populated')) {
+        resF.value();
+      }
+      t.assert('function was called', d.itWorked);
+    });
+  });
+  ts.CASE('has().replace() works', tc => {
+    tc.RUN((t, d) => {
+      d.fmap.register('a.b.c.replfunc', (args, ctx) => {
+        d.notThisOne = true;
+      });
+      var hasAPI = d.fmap.has('a.b.c.replfunc');
+      hasAPI.replace((args, ctx) => {
+        d.butThisOne = true;
+      });
+      var resF = d.fmap.get('a.b.c.replfunc');
+      if (t.assert('function exists', resF.status === 'populated')) {
+        resF.value();
+      }
+      t.assert('correct function was called',
+        ( ! d.notThisOne ) && d.butThisOne);
+    });
+  });
+  ts.CASE('registerMap works', tc => {
+    tc.RUN((t, d) => {
+      var m = {
+        keyFunc: (args, ctx) => {
+          d.itWorked = true;
+        }
+      }
+      d.fmap.registerMap('a.b.c', m);
+      var resF = d.fmap.get('a.b.c.keyFunc');
+      if (t.assert('function exists', resF.status === 'populated')) {
+        resF.value();
+      }
+      t.assert('function was called', d.itWorked);
+    });
+  });
+  ts.CASE('registerMap works at root', tc => {
+    tc.RUN((t, d) => {
+      var m = {
+        keyFunc: (args, ctx) => {
+          d.itWorked = true;
+        }
+      }
+      d.fmap.registerMap('', m);
+      var resF = d.fmap.get('keyFunc');
+      if (t.assert('function exists', resF.status === 'populated')) {
+        resF.value();
+      }
+      t.assert('function was called', d.itWorked);
     });
   });
 });

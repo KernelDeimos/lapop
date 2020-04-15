@@ -6,6 +6,8 @@ var fmaps = require(p+'/interpreting/functionmaps');
 var interpreter = require(p+'/interpreting/interpreter')({
   registry: memory.registry });
 var basefunctions = require('./basefunctions');
+var dottedfmap = require('../interpreting/dottedfmap');
+var stdlib = require('./stdlib/main');
 
 var util = require(p+'/utilities/util');
 
@@ -21,14 +23,8 @@ lib.newStandardExecutorProvider = () => {
 lib.newContextAPI = (internal, context) => {
   let api = context || {};
 
-  api.registerDotted = (name, fmap) => {
-    internal.dotted[name] = fmap;
-  }
-  api.registerObject = obj => {
-    for ( k in obj ) if ( obj.hasOwnProperty(k) ) {
-      internal.object[k] = obj[k];
-    }
-  }
+  api.register = internal.localFmap.register;
+  api.registerMap = internal.localFmap.registerMap;
   api.object = map => {
     return fmaps.newObjectFunctionMap(map)
   }
@@ -64,12 +60,7 @@ lib.newExecutionContext = config => {
     'executorProvider', 'resultHandler',
   ])
 
-  let object = {};
-  let subObjectFmap = fmaps.newObjectFunctionMap(object);
-  let dotted = {};
-  let subDottedFmap = fmaps.newDottedCompositeFunctionMap(
-    dotted, subObjectFmap
-  )
+  let subDottedFmap = dottedfmap.newDottedFunctionMap();
 
   let fmap = fmaps.newFallbackFunctionMap([
     subDottedFmap, config.parentFmap || fmaps.newNullFunctionMap()
@@ -83,9 +74,8 @@ lib.newExecutionContext = config => {
   });
 
   return lib.newContextAPI({
-    object: object,
-    dotted: dotted,
     fmap: fmap,
+    localFmap: subDottedFmap,
     executorProvider: params.executorProvider,
     resultHandler: params.resultHandler,
     ev: ev,
@@ -100,12 +90,19 @@ lib.newStandardExecutionContext = () => {
       console.warn('unrecognized result reached root scope', res);
   };
 
+  let defFuncMap = dottedfmap.newDottedFunctionMap();
+
   let contextAPI = lib.newExecutionContext({
     executorProvider: lib.newStandardExecutorProvider(),
-    resultHandler: rh
+    resultHandler: rh,
+    parentFmap: defFuncMap,
   });
+  console.log('uhhhhh');
+  console.log(contextAPI);
+  console.log(defFuncMap);
 
   basefunctions.install(contextAPI);
+  stdlib.install(contextAPI);
 
   return contextAPI;
 };
