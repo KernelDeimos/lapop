@@ -79,6 +79,15 @@ newResultContext_ = (o) => {
       info: msg
     });
   };
+  ctx.resExternal = (msg, extra) => {
+    if ( typeof extra === 'undefined' ) extra = {};
+    return newResult_({
+      ...ctx.baseValues,
+      ...extra,
+      status: 'external',
+      info: msg
+    });
+  };
   ctx.resOK = (value, extra) => {
     var res = {...ctx.baseValues, ...extra};
     res.status = (() => {
@@ -100,6 +109,7 @@ var lib = newResultContext_();
 lib.isError = o => false
   || o.status === 'invalid'
   || o.status === 'internal'
+  || o.status === 'external'
 
 lib.isNegative = o => false
   || o === false

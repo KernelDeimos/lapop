@@ -312,8 +312,9 @@ lib.install = api => {
   install_script(primitives.newStream(`
     def pattern bootscript [ [list] ]
 
-    def pattern any [[either [[string]] [[float]] [[assoc]] ]]
+    def pattern any [[either [[string]] [[float]] [[assoc]] [[code]] ]]
     def pattern : [ [symbol] [any] ]
+    def pattern :o [ [symbol] [any] ]
     def pattern = [ [symbol] [any] ]
     def pattern :fn [ [symbol] [assoc] [list] ]
     def pattern =fn [ [symbol] [assoc] [list] ]

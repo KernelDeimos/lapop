@@ -83,6 +83,14 @@ lib.try_string = (s) => {
         let c = ms.chr();
         if ( escaping ) {
             escaping = false;
+            switch ( c ) {
+              case '\\':
+                c = '\\'; break;
+              case 'n':
+                c = '\n'; break;
+              case 't':
+                c = '\t'; break;
+            }
             value += ''+c;
             continue;
         }
