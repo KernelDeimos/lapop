@@ -1,0 +1,21 @@
+def script main [
+  : sandbox (fs.new 'file:./sandbox')
+  : file (sandbox.ow 'testfile.js')
+  : cursor (lepot.gen.cursor.new (file))
+  (cursor.addLine '// comment')
+  (cursor.sub 'imports')
+  (cursor.addLine 'if (1 + 2 == 3) {')
+  (cursor.++)
+    (cursor.addLine 'console.log(\'Hello!\');')
+  (cursor.--)
+  (cursor.addLine '}')
+
+  : sc (cursor.getSub 'imports')
+  (sc.addLine 'const fs = require(\'fs\');')
+  
+  (logger.dump (cursor.getString))
+
+  (file.write (cursor.getString))
+  (file.close)
+]
+

@@ -8,6 +8,7 @@ var interpreter = require(p+'/interpreting/interpreter')({
 var basefunctions = require('./basefunctions');
 var dottedfmap = require('../interpreting/dottedfmap');
 var stdlib = require('./stdlib/main');
+var cglib = require('./cglib/main');
 
 var util = require(p+'/utilities/util');
 
@@ -100,6 +101,7 @@ lib.newStandardExecutionContext = () => {
 
   basefunctions.install(contextAPI);
   stdlib.install(contextAPI);
+  cglib.install(contextAPI);
 
   return contextAPI;
 };

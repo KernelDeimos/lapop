@@ -25,7 +25,7 @@ var newWriter = (writeStream) => {
     return dres.resOK(null);
   }
 
-  return dres.resOK(api);
+  return dres.resOK(api, { type: 'funcmap' });
 }
 
 var newLocalDirectoryFS = rootDirectory => {
@@ -122,7 +122,7 @@ var newLocalDirectoryFS = rootDirectory => {
       }
     }
   };
-  return dres.resOK(api);
+  return dres.resOK(api, { type: 'funcmap' });
 }
 
 var fsfactory = {

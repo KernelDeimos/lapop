@@ -86,13 +86,16 @@ lib.arithmetic = {};
 lib.variable = {};
 
 lib.variable[':'] = localUtil.newFunc((args, context) => {
-  let o = {};
-  o[args[0].value] = fargs => { return args[1]; };
-  context.registerMap('', o);
-}, localUtil.newListValidator(['symbol','ignore']));
+  let varName = args[0];
+  let varValu = args[1];
 
-lib.variable[':o'] = localUtil.newFunc((args, context) => {
-  context.registerMap(args[0].value, args[1].value);
+  let o = {};
+  o[varName.value] = fargs => { return varValu; };
+  context.registerMap('', o);
+
+  if ( varValu.type === 'funcmap' ) {
+    context.registerMap(varName.value, varValu.value);
+  }
 }, localUtil.newListValidator(['symbol','ignore']));
 
 lib.variable[':fn'] = localUtil.newFunc((args, context) => {
@@ -252,6 +255,25 @@ lib.controlflow.while = (args, ctx) => {
   return dres.resOK(null);
 }
 
+lib.safety = {}
+lib.safety['checkFuncmap'] = localUtil.newFunc((args, context) => {
+  let missing = [];
+  args[0].value.map(
+    // TODO: is recursive data proessing a good idea?
+    unprocessed => util.dhelp.processData(null, unprocessed)
+  ).forEach((v) => {
+    if ( ! args[1].value.hasOwnProperty(v.value) ) {
+      missing.push(v.value);
+    }
+  })
+  if ( missing.length > 0 ) {
+    return dres.resInvalid(
+      'missing:' + JSON.stringify(missing)
+    );
+  }
+  return dres.resOK()
+}, localUtil.newListValidator(['list', 'funcmap']))
+
 lib.logger = {
   'info': localUtil.newFunc(args => {
     console.log('\x1B[36;1m[info]\x1B[0m',
@@ -287,6 +309,7 @@ lib.install = api => {
   api.registerMap('', lib.controlflow);
   api.registerMap('', lib.variable);
   api.registerMap('', lib.conv);
+  api.registerMap('lepot.lang.safety', lib.safety);
 
   let install_script = (s) => {
       // Script is allowed to begin with whitespace

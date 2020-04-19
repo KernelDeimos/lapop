@@ -1,3 +1,15 @@
+def pattern if [
+  [list]
+  [list]
+]
+
 def script main [
+  (: a 1)
+  (: b 1)
+  (logger.dump (a))
+  (logger.dump (b))
+  if [== (a) (b)] [
+    (logger.info 'yes')
+  ]
   (logger.info 'hello')
 ]
