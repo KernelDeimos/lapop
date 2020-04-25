@@ -29,6 +29,12 @@ lib.process_pattern_by_name = (name, args, s) => {
         return dres.unknownIsDefiant(result);
       advance(result);
       return dresFilling.resOK( [ result.value ] );
+    case 'symbol':
+      result = primitives.try_symbol(s);
+      if ( dres.isNegative(result) )
+        return dres.unknownIsDefiant(result);
+      advance(result);
+      return dresFilling.resOK( [ result.value ] );
     case 'object':
     case 'assoc': // alias
       let try_key = primitives.alt.bind(

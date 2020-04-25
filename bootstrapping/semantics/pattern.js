@@ -21,7 +21,11 @@ lib.process_pattern = (config, pattern, s) => {
     dresLocal.set('stream', s);
   };
 
+  // pattern filling items
   let items = [];
+
+  // remembers name-for-pattern results for the pattern-from-name pseudo-type.
+  let identifiers = {};
 
   pattern = dhelp.processData(null, pattern);
   if ( dres.isNegative(pattern) ) {
@@ -72,6 +76,40 @@ lib.process_pattern = (config, pattern, s) => {
             info: 'no patterns matched'
           });
         }
+        break;
+      case 'symbol-for-pattern':
+        let patternIdentSymbol = dhelp.processData(null, patternNode[1]);
+
+        // note: res2 is a filling containing a listified symbol
+        let res2 = config.process_pattern_by_name('symbol', [], s);
+        if ( dres.isNegative(res2) ) {
+          res2.info = `while processing identifier ${ident} ` +
+            `${patternName}: ${res2.info}`
+        }
+
+        // This closure adds the named pattern to the `identifiers` map
+        (() => {
+          let listifiedSymbol = res2.value[0];
+          let processedSymbol = dhelp.processData(null, listifiedSymbol);
+          identifiers[patternIdentSymbol.value] = processedSymbol.value;
+        })();
+
+        advance(res2)
+        items.push(...res2.value);
+        break;
+      case 'pattern-from-symbol':
+        (() => {
+          let patternIdentSymbol = dhelp.processData(null, patternNode[1]);
+          let expectedPattern = identifiers[patternIdentSymbol.value];
+          let res3 = config.process_pattern_by_name(
+            expectedPattern, [], s);
+          if ( dres.isNegative(res3) ) {
+            res3.info = `while processing identifier ${expectedPattern} ` +
+              `${patternName}: ${res3.info}`
+          }
+          items.push(...res3.value);
+          advance(res3)
+        })();
         break;
       default:
         let args = patternNode.slice(1);

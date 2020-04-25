@@ -1,0 +1,1 @@
+- Result of `process_pattern_by_name` should always be of type `filling`
