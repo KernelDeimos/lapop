@@ -1,20 +1,41 @@
 'use strict';
 
-var new_lame_object = () => {
+var new_lame_object = (cb, type, name) => {
     var o = {
-        def: null
     };
+    var def = null;
+    Object.defineProperty(o, 'def', {
+        get: () => def,
+        set: v => {
+            def = v;
+            cb(type, name, v);
+        }
+    });
     return o;
 }
 
 var stores = {};
 var orders = {};
 
+var listeners = [];
+
+var callListeners = (type, name, value) => {
+    for ( let i=0; i < listeners.length; i++ ) {
+        listeners[i]({
+            type: 'def',
+            of: type,
+            for: name,
+            value: value
+        });
+    }
+};
+
 var lib = {};
-lib.registry = (() => {
+lib.registry = ((cb) => {
+    var cb = cb || (() => {});
     return (type, name) => {
         var _b = () => {
-            stores[type][name] = new_lame_object();
+            stores[type][name] = new_lame_object(cb, type, name);
             orders[type].push(name);
         }
         if ( ! stores.hasOwnProperty(type) ) {
@@ -26,7 +47,7 @@ lib.registry = (() => {
         }
         return stores[type][name];
     };
-})();
+})(callListeners);
 
 lib.registry('pattern', 'pattern').def = [
     // First (and only) item in a pattern
@@ -39,6 +60,10 @@ lib.registry('pattern', 'pattern').def = [
         ]
     ]
 ];
+
+lib.addListener = lis => {
+    listeners.push(lis);
+}
 
 lib.install_in_soup = soup_ => {
     soup_.registry = lib.registry;

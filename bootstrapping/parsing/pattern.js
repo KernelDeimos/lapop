@@ -59,14 +59,16 @@ lib.process_pattern_by_name = (name, args, s) => {
       return dresFilling.resOK( [ result.value ] );
     default:
       let maybeDef = soup.registry('pattern', name);
-      if ( maybeDef.hasOwnProperty('def') ) {
+      if ( maybeDef.hasOwnProperty('def') && maybeDef.def !== null ) {
           result = lib.process_pattern(maybeDef.def[0], s);
           if ( dres.isNegative(result) )
               return dres.unknownIsDefiant(result);
           return result;
       }
-      return dres.resInvalid(
-        `pattern name "${name}" not recognized`, {
+      return dres.result({
+        status: 'unknown',
+        info: `pattern name "${name}" not recognized`,
+        subject: name,
         stream: s
       });
   }

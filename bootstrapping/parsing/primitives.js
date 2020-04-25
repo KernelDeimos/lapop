@@ -18,6 +18,7 @@ lib.newStream = (str, pos) => {
   o.chr = () => str[pos];
   o.next = () => lib.newStream(str, pos+1);
   o.getReal = () => lib.newMutableStream(str, pos);
+  o.getIndex = () => pos;
   return o;
 }
 

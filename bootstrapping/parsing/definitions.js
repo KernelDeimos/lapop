@@ -47,7 +47,6 @@ lib.try_def = (s) => {
 
     let result = patternParsing.process_pattern_by_name(pattern.value[1], [], s);
     if ( dres.isNegative(result) ) {
-      result.status = 'invalid';
       return result;
     }
     s = result.stream;

@@ -25,6 +25,10 @@ var fmaps  = require(
 var context  = require(
   './bootstrapping/language/context');
 
+if ( process.env.hasOwnProperty('LEPOT_VERBOSE') ) {
+  memory.addListener(o => console.log(o));
+}
+
 var codePattern = [['list',['list', ['symbol', 'list']]]];
 memory.registry('pattern', 'script').def = codePattern;
 memory.registry('pattern', 'now').def = codePattern;
@@ -68,7 +72,7 @@ lib.badREPL = (start, end) => {
   var rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-    terminal: false
+    prompt: ''
   });
 
   var start = `def script main [\n`;
@@ -92,6 +96,9 @@ lib.badREPL = (start, end) => {
     if ( line === "" ) {
       let res = lib.execStream(primitives.newStream(
         rewrite(buffer), 0));
+      if ( dres.isNegative(res) ) {
+        console.log(replPre + "Error: ", res);
+      }
       console.log('> ' + res);
       buffer = "";
     }
