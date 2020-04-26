@@ -301,8 +301,19 @@ lib.installLogger = api => {
   api.registerMap('logger', lib.logger);
 }
 
+lib.registry = {};
+lib.registry.put = (args, context) => {
+  let of_ = args[0].value;
+  let for_ = args[1].value;
+  let filling = args.slice(2).map(item => util.dhelp.listifyData(item));
+  memory.registry(of_, for_).def = filling;
+
+  return dres.resOK();
+}
+
 lib.install = api => {
   lib.installLogger(api);
+  api.registerMap('', lib.registry);
   api.registerMap('', lib.arithmetic);
   api.registerMap('', lib.lists);
   api.registerMap('', lib.boolean);
