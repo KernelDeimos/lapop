@@ -32,6 +32,11 @@ if ( process.env.hasOwnProperty('LEPOT_VERBOSE') ) {
 var codePattern = [['list',['list', ['symbol', 'list']]]];
 memory.registry('pattern', 'script').def = codePattern;
 memory.registry('pattern', 'now').def = codePattern;
+memory.registry('pattern', 'put').def = [['list',
+  ['list', ['symbol', 'symbol-for-pattern'], ['symbol', 'sym_']],
+  ['list', ['symbol', 'symbol']],
+  ['list', ['symbol', 'pattern-from-symbol'], ['symbol', 'sym_']],
+]];
 
 var lib = {};
 
@@ -42,20 +47,12 @@ lib.execStream = (s) => {
     // Script is allowed to begin with whitespace
     s = primitives.eat_whitespace(s).stream;
 
-    while ( ! s.eof() ) {
-        let result = definitions.try_def(s);
-        s = result.stream;
-        if ( dres.isNegative(result) ) {
-            return result;
-        }
-        memory.registry(result.of, result.for).def = result.value;
-        if ( result.of === 'script' && result.for === 'main' ) {
-          let lis = dhelp.processData(null, result.value[0]);
-          root.execBlockHere(lis);
-        }
-        s = primitives.eat_whitespace(s).stream;
-    }
-
+    let tokens = primitives.parse_list_tokens(null, primitives.try_any, s);
+    // TODO: The `['list'].concat` part is a code smell now. Maybe execBlockHere
+    //       should be able to just take `tokens.value` as its input.
+    let lis = dhelp.processData(null, ['list'].concat(tokens.value));
+    console.log(JSON.stringify(lis, false, 4));
+    root.execBlockHere(lis);
     return dres.resOK();
 }
 
@@ -83,13 +80,13 @@ lib.badREPL = (start, end) => {
   var buffer = "";
 
   lib.execStream(primitives.newStream(`
-    def script main [
-      (logger.notice '')
-      (logger.notice 'You are in REPL mode!')
-      (logger.notice 'Enter on an empty line to call the executor.')
-      (logger.notice 'Press Ctrl+D (EOF) to exit.')
-      (logger.notice 'The !HELP command will show REPL commands.')
-    ]
+    :fn logrepl {msg [string]} [ (logger.notice (msg)) ]
+    put pattern logrepl [ [any] ]
+    logrepl ''
+    logrepl 'You are in REPL mode!'
+    logrepl 'Enter on an empty line to call the executor.'
+    logrepl 'Press Ctrl+D (EOF) to exit.'
+    logrepl 'The !HELP command will show REPL commands.'
   `, 0));
 
   rl.on('line', function(line){
