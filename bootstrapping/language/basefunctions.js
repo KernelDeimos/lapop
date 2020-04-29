@@ -310,6 +310,10 @@ lib.registry.put = (args, context) => {
 
   return dres.resOK();
 }
+lib.registry.pkg = (args, context) => {
+  memory.currentPackage = args[0].value;
+  return dres.resOK();
+}
 
 lib.install = api => {
   lib.installLogger(api);
@@ -332,7 +336,7 @@ lib.install = api => {
           if ( dres.isNegative(result) ) {
               return result;
           }
-          memory.registry(result.of, result.for).def = result.value;
+          // memory.registry(result.of, result.for).def = result.value;
           if ( result.of === 'bootscript' ) {
             let lis = util.dhelp.processData(null, result.value[0]);
             api.ex(streams.newListStream(lis.value, 0));
@@ -343,6 +347,7 @@ lib.install = api => {
       return dres.resOK();
   }
 
+  /*
   install_script(primitives.newStream(`
     def pattern bootscript [ [list] ]
 
@@ -364,6 +369,7 @@ lib.install = api => {
       ]
     ]
   `, 0));
+  */
 }
 
 module.exports = lib;

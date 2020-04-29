@@ -1,9 +1,11 @@
 #!/usr/local/bin/node
 'use strict';
 const fs = require('fs');
+const path = require('path');
 
 var memory = require(
   './bootstrapping/interpreting/memory');
+memory.id = 2;
 var interpreter = require(
   './bootstrapping/interpreting/interpreter')({
     registry: memory.registry });
@@ -25,7 +27,7 @@ var fmaps  = require(
 var context  = require(
   './bootstrapping/language/context');
 
-if ( process.env.hasOwnProperty('LEPOT_VERBOSE') ) {
+if ( process.env.hasOwnProperty('LEPOT_VERBOSE') && process.env.LEPOT_VERBOSE == 1 ) {
   memory.addListener(o => console.log(o));
 }
 
@@ -50,9 +52,10 @@ lib.execStream = (s) => {
     let tokens = primitives.parse_list_tokens(null, primitives.try_any, s);
     // TODO: The `['list'].concat` part is a code smell now. Maybe execBlockHere
     //       should be able to just take `tokens.value` as its input.
-    let lis = dhelp.processData(null, ['list'].concat(tokens.value));
-    console.log(JSON.stringify(lis, false, 4));
-    root.execBlockHere(lis);
+    let exS = streams.newListStream(
+      dhelp.processData(null, ['list'].concat(tokens.value)).value, 0);
+    // console.log(JSON.stringify(lis, false, 4));
+    root.execBlockHere(exS);
     return dres.resOK();
 }
 
@@ -146,10 +149,19 @@ lib.badREPL = (start, end) => {
   })
 };
 
-var args = process.argv.slice(2);
+// Process builtin definitions
+var directoryloader = require('./bootstrapping/language/tool/directoryloader');
 
-if ( args.length > 0 ) {
-  lib.load(args[0]);
-} else {
-  lib.badREPL();
-}
+directoryloader.exectx = root;
+
+directoryloader.loadDirectory(
+  path.join(__dirname, 'definitions')
+).then(() => {
+  var args = process.argv.slice(2);
+
+  if ( args.length > 0 ) {
+    lib.load(args[0]);
+  } else {
+    lib.badREPL();
+  }
+}).catch(e => { throw e });

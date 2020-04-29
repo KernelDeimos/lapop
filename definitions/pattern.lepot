@@ -1,0 +1,24 @@
+put pattern pkg [ [symbol] ]
+put pattern function [ [assoc] [list] ]
+
+put pattern any [[either [[string]] [[float]] [[assoc]] [[code]] ]]
+put pattern : [ [symbol] [any] ]
+put pattern :o [ [symbol] [any] ]
+put pattern = [ [symbol] [any] ]
+put pattern :fn [ [symbol] [assoc] [list] ]
+put pattern =fn [ [symbol] [assoc] [list] ]
+
+put pattern logger.info [ [string] ]
+put pattern logger.notice [ [string] ]
+
+logger.notice 'LePoT-engaged Pattern-oriented Transpiler'
+logger.notice 'Version 1.0.0-alpha'
+logger.notice 'Copyright (C) 2020 Eric Dube'
+
+:fn hello {} [ logger.info 'hello' ]
+
+:fn if {a__ _ b__ _} [
+  (while (a__) (append (b__) (code [break])))
+]
+put pattern if [ [list] [list] ]
+logger.info 'boot complete'

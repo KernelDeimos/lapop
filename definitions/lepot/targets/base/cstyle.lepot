@@ -1,0 +1,8 @@
+pkg lepot.targets.base.csyntax
+
+put lepot.gen.CodeGenerator function [
+]
+put lepot.gen.CodeGenerator Return [
+  (cursor.write text 'return ')
+  (cursor.write symbol (args 0))
+]

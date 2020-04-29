@@ -68,7 +68,7 @@ lib.process_definitions = (s) => {
         if ( dres.isNegative(result) ) {
             return result;
         }
-        soup.registry(result.of, result.for).def = result.value;
+        // soup.registry(result.of, result.for).def = result.value;
         s = primitives.eat_whitespace(s).stream;
     }
 

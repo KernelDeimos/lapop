@@ -53,6 +53,8 @@ lib.process_pattern = (config, pattern, s) => {
       return dresLocal.dress(patternSymbol);
     let patternName = patternSymbol.value;
 
+    // TODO: replace this switch to make variable names consistent
+    //       ("let"s don't look at "breaks" and enforce irritating scope rules)
     switch ( patternName ) {
       case 'either':
         let choices = patternNode.slice(1);
@@ -85,6 +87,7 @@ lib.process_pattern = (config, pattern, s) => {
         if ( dres.isNegative(res2) ) {
           res2.info = `while processing identifier ${ident} ` +
             `${patternName}: ${res2.info}`
+          return res2;
         }
 
         // This closure adds the named pattern to the `identifiers` map
@@ -98,18 +101,24 @@ lib.process_pattern = (config, pattern, s) => {
         items.push(...res2.value);
         break;
       case 'pattern-from-symbol':
-        (() => {
-          let patternIdentSymbol = dhelp.processData(null, patternNode[1]);
-          let expectedPattern = identifiers[patternIdentSymbol.value];
+          let patternIdentSymbol2 = dhelp.processData(null, patternNode[1]);
+          if ( ! identifiers.hasOwnProperty(patternIdentSymbol2.value) ) {
+            return dres.result({
+              status: 'unknown',
+              info: 'missing pattern',
+              subject: patternIdentSymbol2.value
+            });
+          }
+          let expectedPattern = identifiers[patternIdentSymbol2.value];
           let res3 = config.process_pattern_by_name(
             expectedPattern, [], s);
           if ( dres.isNegative(res3) ) {
             res3.info = `while processing identifier ${expectedPattern} ` +
               `${patternName}: ${res3.info}`
+            return res3;
           }
           items.push(...res3.value);
           advance(res3)
-        })();
         break;
       default:
         let args = patternNode.slice(1);

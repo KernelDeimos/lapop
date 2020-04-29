@@ -18,22 +18,42 @@ var stores = {};
 var orders = {};
 
 var listeners = [];
+var listenerIndexMap = {};
 
 var callListeners = (type, name, value) => {
     for ( let i=0; i < listeners.length; i++ ) {
+        if ( listeners[i] === null ) continue;
         listeners[i]({
-            type: 'def',
-            of: type,
-            for: name,
-            value: value
+            type: 'put',
+            value: {
+                of: type,
+                for: name,
+                value: value
+            }
         });
     }
 };
 
 var lib = {};
+lib.getDebugVals = () => {
+    return {
+        stores: stores,
+        orders: orders
+    }
+}
 lib.registry = ((cb) => {
     var cb = cb || (() => {});
     return (type, name) => {
+        if ( name === undefined ) {
+            throw new Error('wut');
+        }
+        if ( name.startsWith('.') ) {
+            name = name.substr(1);
+            if ( lib.currentPackage ) {
+                name = lib.currentPackage + '.' + name;
+            }
+        }
+
         var _b = () => {
             stores[type][name] = new_lame_object(cb, type, name);
             orders[type].push(name);
@@ -61,13 +81,37 @@ lib.registry('pattern', 'pattern').def = [
     ]
 ];
 
+lib.nextIndex = 0;
+
 lib.addListener = lis => {
-    listeners.push(lis);
+    var id = ++lib.nextIndex;
+    var index = -1;
+    var api = {};
+    api.remove = () => {
+        listeners[listenerIndexMap[id]] = null;
+        delete listenerIndexMap[id];
+    };
+    for ( let i=0; i < listeners.length; i++ ) {
+        if ( listeners[i] === null ) {
+            listeners[i] = lis;
+            listenerIndexMap[id] = i;
+            return api;
+        }
+    }
+    var i = listeners.push(lis) - 1;
+    listenerIndexMap[id] = i;
+    return api;
 }
 
 lib.install_in_soup = soup_ => {
     soup_.registry = lib.registry;
     return soup_;
 };
+
+lib.id = 1;
+lib.debugv = 0;
+
+// Hacky variables
+lib.currentPackage = '';
 
 module.exports = lib;

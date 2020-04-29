@@ -68,6 +68,7 @@ lib.process_pattern_by_name = (name, args, s) => {
       return dres.result({
         status: 'unknown',
         info: `pattern name "${name}" not recognized`,
+        source: 'parser',
         subject: name,
         stream: s
       });

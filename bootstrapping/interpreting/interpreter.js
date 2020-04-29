@@ -5,6 +5,7 @@ var dhelp = require('../utilities/datahelper');
 var util = require('../utilities/util');
 var pattern = require('../semantics/pattern');
 var streams = require('./streams');
+var memory = require('./memory');
 
 var soup;
 
@@ -37,9 +38,13 @@ lib.process_pattern_by_name = (name, args, s) => {
 
   let maybeDef = soup.registry('pattern', name);
   if ( maybeDef.def === null ) {
-    return dres.resInvalid(
-      `pattern name "${name}" not recognized`,
-      { stream: s });
+    return dres.result({
+      status: 'unknown',
+      info: `pattern name "${name}" not recognized`,
+      source: 'interpreter',
+      subject: name,
+      stream: s
+    });
   }
   if ( ! maybeDef.def ) {
     console.warn('invalid definition detected for '+name,
@@ -47,7 +52,7 @@ lib.process_pattern_by_name = (name, args, s) => {
   }
   let result = lib.process_pattern(maybeDef.def[0], s);
   if ( dres.isNegative(result) ) {
-    return dres.unknownIsDefiant(result);
+    return result;
   }
   return result
 }
@@ -60,7 +65,9 @@ lib.process_pattern = pattern.process_pattern.bind(
 
 lib.try_evaluatable = s => {
   let jsnode = dhelp.processData(null, s.val());
-  if ( dres.isNegative(jsnode) ) return jsnode
+  if ( dres.isNegative(jsnode) ) {
+    return jsnode;
+  }
 
   switch ( jsnode.type ) {
     case 'symbol':
@@ -75,21 +82,30 @@ lib.try_evaluatable = s => {
             }
           );
         }
-        return dres.resInvalid('no pattern for '+jsnode.value, {
-          cause: filling
+        return dres.result({
+          status: 'unknown',
+          info: 'no pattern for '+jsnode.value,
+          subject: jsnode.value,
+          cause: filling,
+          stream: s
         });
       }
       s = filling.stream;
-      return dres.resOK([
+      var r = dres.resOK([
         ['symbol', jsnode.value],
         ...filling.value
       ], {
         type: 'code',
         stream: s
       });
+      return r;
     case 'code':
       jsnode.stream = s.next();
       return jsnode;
+    default:
+      return dres.resInvalid('non-evaluatable type', {
+        subject: jsnode.value
+      });
   }
 }
 

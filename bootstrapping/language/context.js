@@ -29,8 +29,8 @@ lib.newContextAPI = (internal, context) => {
   api.object = map => {
     return fmaps.newObjectFunctionMap(map)
   }
-  api.execBlockHere = lis => {
-    internal.ex(streams.newListStream(lis.value, 0));
+  api.execBlockHere = s => {
+    return internal.ex(s);
   }
   api.subContext = (config) => {
     config = config || {};
