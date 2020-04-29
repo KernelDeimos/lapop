@@ -144,7 +144,7 @@ lib.badREPL = (start, end) => {
       t+`!WHY   - This is another REPL command that exists` );
     }
     else {
-      buffer += line;
+      buffer += line + "\n";
     }
   })
 };
