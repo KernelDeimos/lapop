@@ -156,9 +156,29 @@ directoryloader.loadDirectory(
 ).then(() => {
   var args = process.argv.slice(2);
 
-  if ( args.length > 0 ) {
+  if ( args.length > 0 && args[0] !== '--' ) {
+    let scriptOrFile = args[0].trimLeft();
+    let subCommandPkg = 'lepot.tools.lepot.subcommands.';
+    let subCommands = memory.select({ pattern: 'script', under: {
+      startsWith: subCommandPkg,
+      recursive: true
+    } });
+    for ( let i=0; i < subCommands.length; i++) {
+      if ( subCommands[i].for ===
+        subCommandPkg + args[0].trimRight()
+      ) {
+        let scriptBody = subCommands[i].value[0];
+        scriptBody = dhelp.processData(null, scriptBody);
+        let exS = streams.newListStream(scriptBody.value, 0);
+        memory.env.args = args.slice(1);
+        root.execBlockHere(exS);
+        return;
+      }
+    }
+
     lib.load(args[0]);
   } else {
+    if ( args.length > 1 ) memory.env.args = args.slice(1);
     lib.badREPL();
   }
 }).catch(e => { throw e });
