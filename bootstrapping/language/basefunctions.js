@@ -28,8 +28,10 @@ localUtil.newListValidator = (types, fname) => i => arg =>
   ? dres.resOK(null)
   : ( arg.type === types[i] )
     ? dres.resOK(null)
-    : dres.resInvalid(
-      `${fname} expected type "${types[i]}" but got "${arg.type}"`);
+    : ( dres.isNegative(arg) )
+      ? arg
+      : dres.resInvalid(
+        `${fname} expected type "${types[i]}" but got "${arg.type}"`);
 
 localUtil.newFunc = (f, validation) => (args, context) => {
   for ( let i=0; i < args.length; i++ ) {
@@ -127,7 +129,7 @@ lib.variable[':fn'] = localUtil.newFunc((args, context) => {
     return sub.ex(streams.newListStream(args[2].value, 0));
   };
   context.registerMap('', o);
-}, localUtil.newListValidator(['symbol', 'assoc', 'list']));
+}, localUtil.newListValidator(['symbol', 'assoc', 'list'], ':fn'));
 
 lib.variable['='] = localUtil.newFunc((args, context) => {
   let o = {};
