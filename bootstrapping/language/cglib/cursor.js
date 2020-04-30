@@ -95,12 +95,8 @@ newCursor = (file, config) => {
   api.getValue_ = () => {
     var fullString = '';
     for ( let i=0; i < state.pieces.length; i++ ) {
-      console.log('->' + fullString)
-      console.log(state.pieces[i]);
-      console.log(state.pieces[i].value);
       fullString += state.pieces[i].getValue_();
     }
-    console.log('=>' + fullString)
     return fullString;
   }
 

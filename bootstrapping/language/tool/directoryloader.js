@@ -54,9 +54,7 @@ lib.loadDirectory = root => {
       if ( dres.isNegative(tokens) ) {
         console.log('\0x1B[31;1mYES NEGATIVE TOKENS\0x1B[0m');
       }
-      // TODO: The `['list'].concat` part is a code smell now. Maybe execBlockHere
-      //       should be able to just take `tokens.value` as its input.
-      let exS = streams.newListStream(dhelp.processData(null, ['list'].concat(tokens.value)).value, 0);
+      let exS = streams.newListStream(tokens.value, 0);
 
       process_(exS, newPatterns, extra);
     }

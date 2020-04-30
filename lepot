@@ -50,10 +50,7 @@ lib.execStream = (s) => {
     s = primitives.eat_whitespace(s).stream;
 
     let tokens = primitives.parse_list_tokens(null, primitives.try_any, s);
-    // TODO: The `['list'].concat` part is a code smell now. Maybe execBlockHere
-    //       should be able to just take `tokens.value` as its input.
-    let exS = streams.newListStream(
-      dhelp.processData(null, ['list'].concat(tokens.value)).value, 0);
+    let exS = streams.newListStream(tokens.value, 0);
     // console.log(JSON.stringify(lis, false, 4));
     root.execBlockHere(exS);
     return dres.resOK();
