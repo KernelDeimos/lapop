@@ -70,7 +70,7 @@ lib.loadDirectory = root => {
 
         // Add listener to detect new patterns
         let listenerAPI = memory.addListener((item) => {
-          if ( item.type === 'put' && item.of === 'pattern') {
+          if ( item.type === 'put' && item.value.of === 'pattern') {
             newPatterns.push(item.for);
           }
         });
