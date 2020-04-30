@@ -24,6 +24,14 @@ lib.fmap_convertData = {
     }
 
     var methods = {};
+    methods.reconstruct = () => {
+      var lis = [];
+      assoc.forEach(entry => {
+        lis.push(entry.key.value);
+        lis.push(entry.value.value);
+      });
+      return lis;
+    },
     methods.iterate = f => {
       for ( let i=0; i < assoc.length; i++ ) {
         f(assoc[i]);
@@ -83,6 +91,10 @@ lib.processData = (funcMap, data) => {
 }
 
 lib.listifyData = processedData => {
+  if ( processedData.type === 'assoc' ) {
+    return [processedData.type].concat(
+      processedData.value.reconstruct());
+  }
   // Works for both list types and scalar types
   // because concat has inconsistent behaviour.
   return [processedData.type].concat(processedData.value);
