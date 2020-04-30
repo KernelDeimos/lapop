@@ -103,6 +103,58 @@ lib.addListener = lis => {
     return api;
 }
 
+lib.env = {};
+lib.env.args = [];
+
+lib.select = optionsIn => {
+    optionsIn = optionsIn || {};
+    var options = {
+        under: {
+            startsWith: '',
+            recursive: true
+        },
+        pattern: 'any',
+    };
+    for ( k in options ) {
+        options[k] = optionsIn[k] || options[k];
+    }
+
+    var patternIter = () => {};
+    if ( options.pattern === 'any' ) {
+        patternIter = cb => {
+            Object.keys(stores).forEach(pattern => {
+                cb(pattern);
+            })
+        }
+    } else {
+        patternIter = cb => {
+            cb(options.pattern);
+        }
+    }
+
+    var results = [];
+
+    patternIter(pattern => {
+        var store = stores[pattern];
+        Object.keys(store).forEach(name => {
+            if ( ! name.startsWith(options.under.startsWith) ) return;
+            var rest = name.slice(options.under.startsWith.length);
+            if ( 1
+                && ! options.under.recursive
+                && rest.indexOf('.') !== -1
+            ) return;
+            results.push({
+                type: 'definition',
+                of: pattern,
+                for: name,
+                value: store[name].def
+            });
+        });
+    });
+
+    return results;
+}
+
 lib.install_in_soup = soup_ => {
     soup_.registry = lib.registry;
     return soup_;
