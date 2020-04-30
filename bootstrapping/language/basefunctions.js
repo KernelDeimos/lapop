@@ -315,6 +315,19 @@ lib.registry.pkg = (args, context) => {
   return dres.resOK();
 }
 
+lib.os = {};
+lib.os.args = (args, context) => {
+  return dres.resOK(memory.env.args);
+};
+
+lib.testhacks = {};
+lib.testhacks.eval = (args, context) => {
+  if ( typeof args[0].value === 'string' ) {
+    eval(args[0].value);
+  }
+  return dres.resOK();
+}
+
 lib.install = api => {
   lib.installLogger(api);
   api.registerMap('', lib.registry);
@@ -324,6 +337,8 @@ lib.install = api => {
   api.registerMap('', lib.controlflow);
   api.registerMap('', lib.variable);
   api.registerMap('', lib.conv);
+  api.registerMap('os', lib.os);
+  api.registerMap('_node', lib.testhacks);
   api.registerMap('lepot.lang.safety', lib.safety);
 
   let install_script = (s) => {
