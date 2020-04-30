@@ -103,6 +103,20 @@ lib.newStandardExecutionContext = () => {
   stdlib.install(contextAPI);
   cglib.install(contextAPI);
 
+  memory.addListener(event => {
+    if ( event.type === 'put' && event.value.of === 'function' ) {
+      let newFn = contextAPI.getOwner(':fn').call;
+      let args = [
+        { type: 'symbol', value: event.value.for },
+        ...event.value.value.map(
+          v => util.dhelp.processData(null, v))
+      ];
+      let res = newFn(
+        args,
+        contextAPI);
+    }
+  });
+
   return contextAPI;
 };
 
