@@ -69,6 +69,14 @@ lib.processData = (funcMap, data) => {
   if ( funcMap === null ) {
     funcMap = lib.fmap_convertData;
   }
+  if ( ! Array.isArray(data) ) {
+    return dres.resInvalid(
+      'internal error: tried to process non-list', {
+        subject: data,
+        trace: new Error()
+      }
+    );
+  }
   if ( data.length < 1 ) {
     return dres.resInvalid(
       'data type missing from list (empty list not allowed)');

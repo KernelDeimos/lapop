@@ -124,9 +124,6 @@ lib.process_pattern = (config, pattern, s) => {
         let optionalPattern = ['list'].concat(patternNode.slice(1));
         let optionalResult = lib.process_pattern(
           config, optionalPattern, s);
-        if ( dres.isError(optionalResult) ) {
-          return dresLocal.dress(optionalResult);
-        }
         if ( dres.isNegative(optionalResult) ) {
           continue;
         }

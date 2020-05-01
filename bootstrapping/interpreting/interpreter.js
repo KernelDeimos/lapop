@@ -6,14 +6,13 @@ var util = require('../utilities/util');
 var pattern = require('../semantics/pattern');
 var streams = require('./streams');
 var memory = require('./memory');
+var plugins = require('../utilities/plugins');
 
 var soup;
 
 var lib = {};
 
 lib.process_pattern_by_name = (name, args, s) => {
-  let res = dhelp.processData(null, s.val());
-  if ( dres.isNegative(res) ) return res;
   let primitives = [
     'assoc', 'list', 'code', 'string', 'symbol', 'float'
   ];
@@ -27,6 +26,7 @@ lib.process_pattern_by_name = (name, args, s) => {
     if ( dres.isNegative(res) ) return res;
     if ( res.type !== name ) return dres.result({
       status: 'defiant', 
+      cause: res,
       value: res.value,
       stream: s
     });
