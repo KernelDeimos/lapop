@@ -119,6 +119,12 @@ lib.variable[':fn'] = localUtil.newFunc((args, context) => {
         return dres.result({ status: 'populated', type: 'return' });
       }
     });
+    if ( args.length < 3 ) {
+      let argsFmapObj = {};
+      argsFmapObj['args'] = () => { return { type: 'list', value: fargs } };
+      sub.registerMap('', argsFmapObj);
+      return sub.ex(streams.newListStream(args[1].value, 0));
+    }
     let argNames = args[1].value.keysInOrder();
     let argsFmapObj = {};
     for ( let i=0; i < argNames.length; i++ ) {
@@ -129,7 +135,7 @@ lib.variable[':fn'] = localUtil.newFunc((args, context) => {
     return sub.ex(streams.newListStream(args[2].value, 0));
   };
   context.registerMap('', o);
-}, localUtil.newListValidator(['symbol', 'assoc', 'list'], ':fn'));
+}, null);
 
 lib.variable['='] = localUtil.newFunc((args, context) => {
   let o = {};

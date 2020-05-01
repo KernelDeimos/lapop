@@ -1,13 +1,16 @@
 put pattern pkg [ [symbol] ]
 put pattern script [ [list [code]] ]
-put pattern function [ [assoc] [script] ]
+put pattern function [
+  [ optional [assoc] ]
+  [script]
+]
 put pattern null []
 
 put pattern any [[either [[string]] [[float]] [[assoc]] [[code]] ]]
 put pattern : [ [symbol] [any] ]
 put pattern :o [ [symbol] [any] ]
 put pattern = [ [symbol] [any] ]
-put pattern :fn [ [symbol] [assoc] [list] ]
+put pattern :fn [ [symbol] [function] ]
 put pattern =fn [ [symbol] [assoc] [list] ]
 
 put pattern logger.info [ [string] ]
