@@ -120,6 +120,40 @@ lib.process_pattern = (config, pattern, s) => {
           items.push(...res3.value);
           advance(res3)
         break;
+      case 'optional':
+        let optionalPattern = ['list'].concat(patternNode.slice(1));
+        let optionalResult = lib.process_pattern(
+          config, optionalPattern, s);
+        if ( dres.isError(optionalResult) ) {
+          return dresLocal.dress(optionalResult);
+        }
+        if ( dres.isNegative(optionalResult) ) {
+          continue;
+        }
+        items.push(...optionalResult.value);
+        advance(optionalResult);
+        break;
+      case 'keyword':
+        // GOTCHA: as of writing, this is the only place where the
+        //   pattern processer processes a filling value. If
+        //   changing the format for filling results, remove this
+        //   and re-implement it after to avoid debugging two things
+        //   at once.
+        let keywordResult = config.process_pattern_by_name(
+          'symbol', [], s);
+        if ( dres.isNegative(keywordResult) ) {
+          return keywordResult;
+        }
+        if ( patternNode[1][1] !== keywordResult.value[0][1] ) {
+          return dresLocal.result({
+            status: 'defiant',
+            info: 'keyword did not match expected value; ' +
+              `expected '${patternNode[1][1]}' but got '` +
+              keywordResult.value[0][1] + `'`
+          });
+        }
+        advance(keywordResult);
+        break;
       default:
         let args = patternNode.slice(1);
         let res = config.process_pattern_by_name(
