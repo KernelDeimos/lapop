@@ -262,6 +262,35 @@ lib.controlflow.while = (args, ctx) => {
   }
   return dres.resOK(null);
 }
+lib.controlflow.if = (args, ctx) => {
+  let sub = ctx.subContext({
+    resultHandler: (api, res) => {
+      if ( res.type === 'fi' ) {
+        api.stop(res);
+        return;
+      }
+      ctx.callResultHandler(api, res);
+    }
+  });
+  while ( args.length > 0 ) {
+    if ( args.length > 1 ) {
+      if ( args[0].type === 'list' ) {
+        let condRes = sub.ev(streams.newListStream(args[0].value, 0));
+        if ( dres.isNegative( condRes ) ) return condRes;
+        if ( condRes.value !== true ) {
+          args = args.slice(2);
+          continue;
+        }
+      } else if ( args[0].value !== true ) {
+        args = args.slice(2)
+        continue;
+      }
+      args = args.slice(1);
+    }
+    let ifres = sub.ex(streams.newListStream(args[0].value, 0));
+    return ifres;
+  }
+}
 
 lib.safety = {}
 lib.safety['checkFuncmap'] = localUtil.newFunc((args, context) => {

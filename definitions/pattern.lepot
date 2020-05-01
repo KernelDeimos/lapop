@@ -10,6 +10,7 @@ put pattern any [[either [[string]] [[float]] [[assoc]] [[code]] ]]
 put pattern : [ [symbol] [any] ]
 put pattern :o [ [symbol] [any] ]
 put pattern = [ [symbol] [any] ]
+put pattern == [ [any] [any] ]
 put pattern :fn [ [symbol] [function] ]
 put pattern =fn [ [symbol] [assoc] [list] ]
 
@@ -22,8 +23,13 @@ logger.notice 'Copyright (C) 2020 Eric Dube'
 
 :fn hello {} [ logger.info 'hello' ]
 
-:fn if {a__ _ b__ _} [
-  (while (a__) (append (b__) (code [break])))
+put pattern if [
+  [ either [[code]] [[list]] ]
+  [list]
+  [ optional
+    [ keyword or ]
+    [ either [[if]] [[list]] ]
+  ]
 ]
-put pattern if [ [list] [list] ]
+
 logger.info 'boot complete'
