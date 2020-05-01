@@ -22,6 +22,13 @@ lib.process_pattern_by_name = (name, args, s) => {
   if ( name in aliases ) name = aliases[name];
 
   if ( primitives.includes(name) ) {
+    if ( s.eof() ) {
+      return dres.result({
+        status: 'defiant',
+        info: 'end of stream',
+        stream: s
+      });
+    }
     let res = dhelp.processData(null, s.val());
     if ( dres.isNegative(res) ) return res;
     if ( res.type !== name ) return dres.result({
