@@ -1,0 +1,10 @@
+pkg lepot._playground
+
+put pattern .funcyscript [
+  [optional [assoc]]
+  [list]
+]
+put pattern .haskw [
+  [keyword tester]
+  [symbol]
+]

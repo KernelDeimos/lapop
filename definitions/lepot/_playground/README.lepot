@@ -1,0 +1,5 @@
+pkg lepot._playground
+
+put string description '
+  This package contains code for testing LePoT features.
+'

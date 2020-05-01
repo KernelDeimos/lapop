@@ -1,5 +1,7 @@
 put pattern pkg [ [symbol] ]
-put pattern function [ [assoc] [list] ]
+put pattern script [ [list [code]] ]
+put pattern function [ [assoc] [script] ]
+put pattern null []
 
 put pattern any [[either [[string]] [[float]] [[assoc]] [[code]] ]]
 put pattern : [ [symbol] [any] ]
