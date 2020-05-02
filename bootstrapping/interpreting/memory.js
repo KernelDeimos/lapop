@@ -1,5 +1,7 @@
 'use strict';
 
+var registry = require('./registry');
+
 var new_lame_object = (cb, type, name) => {
     var o = {
     };
@@ -69,6 +71,9 @@ lib.registry = ((cb) => {
     };
 })(callListeners);
 
+lib.registry_ = registry.newRegistry();
+lib.registry = lib.registry_.fabricate;
+
 lib.registry('pattern', 'pattern').def = [
     // First (and only) item in a pattern
     ['list',
@@ -102,10 +107,12 @@ lib.addListener = lis => {
     listenerIndexMap[id] = i;
     return api;
 }
+lib.addListener = lib.registry_.addListener;
 
 lib.env = {};
 lib.env.args = [];
 
+/*
 lib.select = optionsIn => {
     optionsIn = optionsIn || {};
     var options = {
@@ -154,6 +161,7 @@ lib.select = optionsIn => {
 
     return results;
 }
+*/
 
 lib.install_in_soup = soup_ => {
     soup_.registry = lib.registry;
@@ -165,5 +173,9 @@ lib.debugv = 0;
 
 // Hacky variables
 lib.currentPackage = '';
+Object.defineProperty(lib, 'currentPackage', {
+    get: () => lib.registry_.data_.currentPackage,
+    set: v => lib.registry_.data_.currentPackage = v
+});
 
 module.exports = lib;
