@@ -17,7 +17,24 @@ lib.newRegistryObject = (cb, type, name) => {
     return o;
 }
 
-lib.newRegistry = (delegate) => {
+lib.newDelegatingRegistryObject = (
+  type, name, parent, child
+) => {
+    var o = {};
+    var def = null;
+    Object.defineProperty(o, 'def', {
+        get: () => child.has(type, name)
+          ? child.fabricate(type, name).def
+          : parent.has(type, name)
+            ? parent.fabricate(type, name).def
+            : null
+          ,
+        set: v => child.fabricate(type, name).def = v,
+    });
+    return o;
+}
+
+lib.newRegistry = () => {
   var api = {};
   api.data_ = {};
   api.data_.currentPackage = '';
@@ -28,8 +45,6 @@ lib.newRegistry = (delegate) => {
 
   var stores = api.data_.stores;
   var orders = api.data_.orders;
-  var listeners = api.data_.listeners;
-  var listenerIndexMap = api.data_.listenerIndexMap;
 
   for ( let propKey in api.data_.emitter ) {
     let prop = api.data_.emitter[propKey];
@@ -80,6 +95,20 @@ lib.newRegistry = (delegate) => {
   }
 
   return api;
+}
+
+lib.newDelegatingRegistry = (parent, child) => {
+  var api = {};
+
+  var stores = api.data_.stores;
+
+  api.has = (type, name) => false
+    || child.has(type, name)
+    || parent.has(type, name)
+    ;
+ 
+  api.fabricate = (type, name) =>
+    lib.newDelegatingRegistryObject(type, name, parent, child)
 }
 
 lib.select = (registry, optionsIn) => {
