@@ -101,7 +101,7 @@ or [
 Notes:
 - LePoT does not have infix operators by design; everything is a
   function. In this example `==`, `if`, and `:` are all functions.
-- `or` is a pseudo-argument of `of` that extends its pattern
+- `or` is a pseudo-argument of `if` that extends its pattern
 - hardly any of this will make sense until you read the next
   section on patterns.
 
@@ -134,6 +134,19 @@ put pattern MyFunc [
   [string]
 ]
 ```
+
+Now we cal call MyFunc like this:
+```
+MyFunc 'World'
+```
+
+In this situation it's best to use `(MyFunc 'World')` anyway.
+Patterns should be use for functions which add structure to
+code (like `each`, `if`, etc), whos arguments are typically
+lists and maps or keywords that continue a recursive pattern.
+Imagine if you saw `a b c d e f` in a LePoT source file; how do
+you know which symbols are functions and which symbols are
+arguments?
 
 This is the pattern for `if`:
 
