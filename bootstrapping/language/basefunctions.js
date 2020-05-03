@@ -99,6 +99,10 @@ lib.install = api => {
   api.registerMap('_node', lib.testhacks);
   api.registerMap('lepot.lang.safety', lib.safety);
 
+  api.registerMap(
+    'string',
+    require('./basefunctions/string'));
+
   let install_script = (s) => {
       // Script is allowed to begin with whitespace
       s = primitives.eat_whitespace(s).stream;
