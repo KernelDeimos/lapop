@@ -23,20 +23,30 @@ lib.variable[':'] = localUtil.newFunc((args, context) => {
 lib.variable[':fn'] = localUtil.newFunc((args, context) => {
   let o = {};
   o[args[0].value] = fargs => {
+    let retval = dres.resOK();
     let sub = context.subContext({
       resultHandler: (api, res) => {
         if ( res.type === 'return' ) {
           // TODO: I think this will fail when returning in
           //       a loop...
           api.stop(res);
+          if ( res.hasOwnProperty('value') ) {
+            retval = res.value;
+          }
           return;
         }
         context.callResultHandler(api, res);
       }
     });
     sub.registerMap('', {
-      "return": () => {
-        return dres.result({ status: 'populated', type: 'return' });
+      "return": (args, ctx) => {
+        return dres.result({
+          status: 'populated',
+          type: 'return',
+          value: (args.length > 0 )
+            ? args[0]
+            : undefined
+        });
       }
     });
     if ( args.length < 3 ) {
@@ -52,7 +62,11 @@ lib.variable[':fn'] = localUtil.newFunc((args, context) => {
     }
     // ERROR HERE?
     sub.registerMap('', argsFmapObj);
-    return sub.ex(streams.newListStream(args[2].value, 0));
+    let exRes = sub.ex(streams.newListStream(args[2].value, 0));
+    if ( dres.isNegative(exRes) ) {
+      return exRes;
+    }
+    return retval;
   };
   context.registerMap('', o);
 }, null);
