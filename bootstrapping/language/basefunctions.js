@@ -291,6 +291,26 @@ lib.controlflow.if = (args, ctx) => {
     return ifres;
   }
 }
+lib.controlflow.each = (args, ctx) => {
+  // TODO: add break; need to factor it out of while
+
+  var sub = ctx.subContext();
+
+  var lis = args[0];
+  var sym = args[1];
+  var scr = args[2];
+
+  var results = lis.value.map(item => {
+    var loopVars = {};
+    loopVars[sym.value] = () => {
+      return util.dhelp.processData(null, item);
+    };
+    sub.registerMap('', loopVars);
+    return sub.ex(streams.newListStream(scr.value, 0));
+  });
+
+  return dres.resOK();
+};
 
 lib.safety = {}
 lib.safety['checkFuncmap'] = localUtil.newFunc((args, context) => {

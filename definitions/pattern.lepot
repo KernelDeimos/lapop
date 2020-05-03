@@ -31,5 +31,10 @@ put pattern if [
     [ either [[if]] [[list]] ]
   ]
 ]
+put pattern each [
+  [ either [[code]] [[list]] ]
+  [symbol]
+  [list [code]]
+]
 
 logger.info 'boot complete'
