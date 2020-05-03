@@ -58,6 +58,7 @@ lib.controlflow.if = (args, ctx) => {
     let ifres = sub.ex(streams.newListStream(args[0].value, 0));
     return ifres;
   }
+  return dres.resOK();
 }
 lib.controlflow.each = (args, ctx) => {
   // TODO: add break; need to factor it out of while
