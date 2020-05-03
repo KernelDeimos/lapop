@@ -6,7 +6,11 @@ put pattern function [
 ]
 put pattern null []
 
-put pattern any [[either [[string]] [[float]] [[assoc]] [[code]] ]]
+put pattern any [[either
+  [[string]] [[float]]
+  [[assoc]]
+  [[list]] [[code]]
+]]
 put pattern : [ [symbol] [any] ]
 put pattern :o [ [symbol] [any] ]
 put pattern = [ [symbol] [any] ]
