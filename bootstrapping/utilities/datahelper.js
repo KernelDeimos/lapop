@@ -60,7 +60,9 @@ lib.fmap_convertData = {
         value: v
       });
     }
-    return dres.resOK(methods);
+    return dres.resOK(assoc, {
+      api: methods
+    });
   }
 };
 
@@ -99,10 +101,6 @@ lib.processData = (funcMap, data) => {
 }
 
 lib.listifyData = processedData => {
-  if ( processedData.type === 'assoc' ) {
-    return [processedData.type].concat(
-      processedData.value.reconstruct());
-  }
   // Works for both list types and scalar types
   // because concat has inconsistent behaviour.
   return [processedData.type].concat(processedData.value);

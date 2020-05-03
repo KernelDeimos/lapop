@@ -55,7 +55,7 @@ lib.variable[':fn'] = localUtil.newFunc((args, context) => {
       sub.registerMap('', argsFmapObj);
       return sub.ex(streams.newListStream(args[1].value, 0));
     }
-    let argNames = args[1].value.keysInOrder();
+    let argNames = args[1].api.keysInOrder();
     let argsFmapObj = {};
     for ( let i=0; i < argNames.length; i++ ) {
       argsFmapObj[argNames[i]] = () => fargs[i];
