@@ -111,6 +111,9 @@ lib.install = api => {
   api.registerMap(
     'map',
     require('./basefunctions/map'));
+  api.registerMap(
+    '',
+    require('./basefunctions/debug'));
 
   let install_script = (s) => {
       // Script is allowed to begin with whitespace
