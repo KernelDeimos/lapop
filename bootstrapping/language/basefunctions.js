@@ -86,6 +86,11 @@ lib.testhacks.eval = (args, context) => {
   return dres.resOK();
 }
 
+lib.dres = {};
+lib.dres.invalid = (args, ctx) => {
+  return dres.resInvalid(args[0].value);
+};
+
 lib.install = api => {
   lib.installLogger(api);
   api.registerMap('', lib.registry);
@@ -98,6 +103,7 @@ lib.install = api => {
   api.registerMap('os', lib.os);
   api.registerMap('_node', lib.testhacks);
   api.registerMap('lepot.lang.safety', lib.safety);
+  api.registerMap('r', lib.dres);
 
   api.registerMap(
     'string',
