@@ -51,4 +51,7 @@ lib.boolean['<'] = localUtil.newFunc((args, context) => {
   return dres.resOK(true);
 }, localUtil.newVariadicValidator('float', '<'));
 
+lib.boolean['true'] = () => dres.resOK(true, { type: 'bool' });
+lib.boolean['false'] = () => dres.resOK(false, { type: 'bool' });
+
 module.exports = lib.boolean;
