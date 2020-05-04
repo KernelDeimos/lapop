@@ -60,9 +60,22 @@ lib.fmap_convertData = {
         value: v
       });
     }
-    return dres.resOK(assoc, {
-      api: methods
-    });
+    // Have to bypass dres here (hacky)
+    var o = { status: 'populated' };
+    o.internal = assoc;
+    o.api = methods;
+    Object.defineProperty(o, 'value', {
+      get: () => {
+        var lis = [];
+        o.internal.forEach(entry => {
+          lis.push( lib.listifyData(entry.key) );
+          lis.push( entry.value );
+        })
+        return lis;
+      },
+      set: () => { return false; }
+    })
+    return o;
   }
 };
 

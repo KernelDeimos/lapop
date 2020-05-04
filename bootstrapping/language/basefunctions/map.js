@@ -12,8 +12,8 @@ lib.map = {};
 lib.map.in = (args, ctx) => {
   var map = args[0];
   var key = args[1].value;
-  for ( let i=0; i < map.value.length; i++ ) {
-    let entry = map.value[i];
+  for ( let i=0; i < map.internal.length; i++ ) {
+    let entry = map.internal[i];
     if ( entry.key.value === key )
       return dres.resOK(true, { type: 'bool' });
   }
@@ -25,8 +25,8 @@ lib.map.get = (args, ctx) => {
   var key = args[1].value;
   // TODO: Add cache for keys that can be stored in a Javascript
   //       map to make this O(1) instead of O(n)
-  for ( let i=0; i < map.value.length; i++ ) {
-    let entry = map.value[i];
+  for ( let i=0; i < map.internal.length; i++ ) {
+    let entry = map.internal[i];
     if ( entry.key.value === key )
       return dres.resOK(util.dhelp.processData(null, entry.value));
   }
@@ -39,15 +39,15 @@ lib.map.put = (args, ctx) => {
   var val = util.dhelp.listifyData(args[2]);
   // TODO: Add cache for keys that can be stored in a Javascript
   //       map to make this O(1) instead of O(n)
-  for ( let i=0; i < map.value.length; i++ ) {
-    let entry = map.value[i];
+  for ( let i=0; i < map.internal.length; i++ ) {
+    let entry = map.internal[i];
     if ( entry.key.value === key.value ) {
       let oldValue = entry.value;
       entry.value = val;
       return oldValue;
     }
   }
-  map.value.push({
+  map.internal.push({
     key: key,
     value: val
   });
