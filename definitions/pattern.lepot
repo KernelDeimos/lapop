@@ -41,4 +41,13 @@ put pattern each [
   [list [code]]
 ]
 
+put pattern r.invalid [
+  [string]
+  [assoc]
+]
+
+put pattern return [
+  [any]
+]
+
 logger.info 'boot complete'
