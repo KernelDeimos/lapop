@@ -38,5 +38,8 @@ lib.string.startsWith = (args, ctx) => {
 lib.string.cat = (args, ctx) => {
   return dres.resOK(args.map(a => a.value).join(''));
 };
+lib.string.split = (args, ctx) => {
+  return dres.resOK(args[0].value.split(args[1].value))
+};
 
 module.exports = lib.string;
