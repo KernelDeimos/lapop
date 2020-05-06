@@ -75,7 +75,13 @@ lib.registry.pkg = (args, context) => {
 
 lib.os = {};
 lib.os.args = (args, context) => {
-  return dres.resOK(memory.env.args);
+  vals = [];
+  memory.env.args.forEach(v => {
+    vals.push(['string', v]);
+  });
+  return dres.resOK(vals, {
+    type: 'list'
+  });
 };
 
 lib.testhacks = {};
