@@ -193,7 +193,7 @@ lib.alt = (options, s) => {
     return resultToReturn;
 }
 
-lib.eat_whitespace = (s) => {
+lib.eat_plain_whitespace = (s) => {
     var wsMap = {
         "\n": true,
         "\r": true,
@@ -206,6 +206,73 @@ lib.eat_whitespace = (s) => {
         stream: s
     })
 }
+
+lib.eat_comment = (s) => {
+  var state = 0;
+  // 0 -> expect forwardslash
+  // 1 -> expect forwardslash or asterisk
+  // 2 -> process until terminating LF
+  // 3 -> process until terminating asterisk
+  // 4 -> process until terminating forwardslash
+  // 5 -> exit loop with OK result
+  for ( ; ! s.eof(); s = s.next() ) {
+    switch (state) {
+      case 0:
+        if ( s.chr() !== '/' ) return dres.result({
+          status: 'unknown', stream: s });
+        state = 1;
+        break;
+      case 1:
+        if ( s.chr() === '/' ) {
+          state = 2;
+          break;
+        }
+        if ( s.chr() === '*' ) {
+          state = 3;
+          break;
+        }
+        return dres.resInvalid(
+          'expected / or * while parsing comment '+
+          `but found ${s.chr()}`, { stream: s });
+      case 2:
+        if ( s.chr() === '\n' ) state = 5;
+      case 3:
+        if ( s.chr() === '*' ) state = 4;
+        break;
+      case 4:
+        if ( s.chr() === '/' ) state = 5;
+        else state = 3;
+        break;
+      case 5:
+        return dres.resOK(null, { type: 'comment', stream: s });
+    }
+  }
+  if ( state === 1 || state === 3 || state === 4 ) {
+    return dres.resInvalid(
+      'unexpected EOF when parsing comment',
+      { stream: s });
+  }
+  if ( state === 0 ) {
+    return dres.resOK(null, { type: 'eof', stream: s });
+  }
+  return dres.resOK(null, { type: 'comment', stream: s });
+}
+
+lib.eat_whitespace = (s) => {
+  while (true) {
+    var res1 = lib.eat_plain_whitespace(s);
+    if ( dres.isError(res1) ) return res1;
+    s = res1.stream;
+    var res2 = lib.eat_comment(s);
+    if ( dres.isError(res2) ) return res2;
+    s = res2.stream;
+    if ( res2.type !== 'comment' ) {
+      break;
+    }
+  }
+  return dres.resOK(null, { stream: s });
+}
+
 
 lib.try_assoc_customized = (try_key, try_val, s) => {
     if ( try_key === null ) {
@@ -316,6 +383,7 @@ lib.try_list = (begin, term, tryer, s) => {
 }
 
 lib.try_any = (s) => {
+    s = lib.eat_whitespace(s).stream;
     let result =  lib.alt([
       lib.try_float,
       lib.try_string,
