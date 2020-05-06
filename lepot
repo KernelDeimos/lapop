@@ -5,6 +5,8 @@ const path = require('path');
 
 var memory = require(
   './bootstrapping/interpreting/memory');
+var registry = require(
+  './bootstrapping/interpreting/registry');
 memory.id = 2;
 var interpreter = require(
   './bootstrapping/interpreting/interpreter')({
@@ -154,15 +156,34 @@ directoryloader.exectx = root;
 directoryloader.loadDirectory(
   path.join(__dirname, 'definitions')
 ).then(() => {
+  // Add loaded functions to the interpreter context
+  var loadedFunctions = registry.select(memory.registry_,
+    { 'pattern': 'function' });
+  loadedFunctions.forEach(def => {
+    let newFn = root.getOwner(':fn').call;
+    let args = [
+      { type: 'symbol', value: def.for },
+      ...def.value.map(
+        v => dhelp.processData(null, v))
+    ];
+    let res = newFn(args, root);
+    if ( dres.isNegative(res) ) {
+      throw new Error(JSON.stringify(res));
+    }
+  });
+
   var args = process.argv.slice(2);
 
   if ( args.length > 0 && args[0] !== '--' ) {
     let scriptOrFile = args[0].trimLeft();
     let subCommandPkg = 'lepot.tools.lepot.subcommands.';
-    let subCommands = memory.select({ pattern: 'script', under: {
-      startsWith: subCommandPkg,
-      recursive: true
-    } });
+    let subCommands = registry.select(memory.registry_, {
+      pattern: 'script',
+      under: {
+        startsWith: subCommandPkg,
+        recursive: true
+      }
+    });
     for ( let i=0; i < subCommands.length; i++) {
       if ( subCommands[i].for ===
         subCommandPkg + args[0].trimRight()
