@@ -23,7 +23,7 @@ lib.string.indexOf = (args, ctx) => {
   return dres.resOK(
     args[0].value.indexOf(args[1].value),
     {
-      type: 'string'
+      type: 'float'
     }
   );
 };
