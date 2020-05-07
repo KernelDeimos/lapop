@@ -36,10 +36,14 @@ lib.string.startsWith = (args, ctx) => {
   );
 };
 lib.string.cat = (args, ctx) => {
-  return dres.resOK(args.map(a => a.value).join(''));
+  return dres.resOK(args.map(a => a.value).join(''), {
+    type: 'string'
+  });
 };
 lib.string.split = (args, ctx) => {
-  return dres.resOK(args[0].value.split(args[1].value))
+  return dres.resOK(args[0].value.split(args[1].value), {
+    type: 'list'
+  })
 };
 
 module.exports = lib.string;
