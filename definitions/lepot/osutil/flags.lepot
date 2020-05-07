@@ -1,0 +1,75 @@
+pkg lepot.osutil
+
+put doc .flags {
+  title 'Flags Processor'
+
+  description '
+    This function processes a list of strings as flags.
+  '
+
+  example '
+    (lepot.osutil.flags {} {} ['--test=value', '-a'])
+  '
+}
+
+put function .flags {
+  // Map of short flags to boolean expectsValue
+  shortValueMap  [assoc [string] [bool]]
+
+  // Map of short flags to corresponding long flags
+  shortToLongMap [assoc [string] [string]]
+
+  // List of string arguments to process as flags
+  args [list [string]]
+} [
+  : results {}
+  each (args) token [
+
+    // Process long flags
+    if [string.startsWith (token) '--'] [
+      : token (string.slice (token) 2)
+      : i (string.indexOf (token) '=')
+      : key ''
+      : val ''
+      if (== (i) -1) [
+        = key (token)
+        = val (true)
+      ] or [
+        = key (string.slice (token) 0 (i))
+        = val (string.slice (token) (+ (i) 1))
+      ]
+      (map.put (results) (key) (val))
+    ]
+
+    // Process short flags
+    or [string.startsWith (token) '-'] [
+      : token (string.slice (token) 1)
+      : expectsValue (false)
+      : lastLetter ''
+      each (token) l [
+        : key (l)
+        : val (true)
+        if [map.in (shortValueMap) (l)] [
+          if (expectsValue) [
+            return (r.invalid (string.cat
+              "Missing value for -" (lastLetter) " flag") {})
+          ] or [
+            = lastLetter (l)
+            = expectsValue (true)
+          ]
+        ]
+        if [map.in (shortToLongMap) (l)] [
+          = key (map.get (shortToLongMap) (key))
+        ]
+        // TODO: parse value if shortValueMap entry is true
+        (map.put (results) (key) (val))
+      ]
+    ]
+
+    // Process subcommands
+    or [
+      return (r.invalid 'subcommands not implemented yet' {})
+    ]
+  ]
+  return (results)
+]
