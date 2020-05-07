@@ -72,6 +72,8 @@ newResultContext_ = (o) => {
   };
   ctx.resInvalid = (msg, extra) => {
     if ( typeof extra === 'undefined' ) extra = {};
+    // TODO: temporary
+    console.log(msg, extra, new Error());
     return newResult_({
       ...ctx.baseValues,
       ...extra,
