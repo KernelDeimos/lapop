@@ -69,6 +69,15 @@ lib.controlflow.each = (args, ctx) => {
   var sym = args[1];
   var scr = args[2];
 
+  if ( lis.type === 'string' ) {
+    // TODO: iff adapt feature is added to LePoT,
+    //       use that instead
+    lis = {
+      type: 'list',
+      value: lis.value.split('').map(v => ['string', v])
+    };
+  }
+
   var results = lis.value.map(item => {
     var loopVars = {};
     loopVars[sym.value] = () => {
