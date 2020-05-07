@@ -50,4 +50,6 @@ put pattern return [
   [any]
 ]
 
+put pattern ~! []
+
 logger.info 'boot complete'
