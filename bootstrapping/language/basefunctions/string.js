@@ -41,7 +41,9 @@ lib.string.cat = (args, ctx) => {
   });
 };
 lib.string.split = (args, ctx) => {
-  return dres.resOK(args[0].value.split(args[1].value), {
+  return dres.resOK(args[0].value.split(args[1].value).map(v => {
+    return ['string', v];
+  }), {
     type: 'list'
   })
 };
