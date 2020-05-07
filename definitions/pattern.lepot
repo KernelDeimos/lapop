@@ -52,4 +52,6 @@ put pattern return [
 
 put pattern ~! []
 
+put pattern doc [ [assoc] ]
+
 logger.info 'boot complete'
