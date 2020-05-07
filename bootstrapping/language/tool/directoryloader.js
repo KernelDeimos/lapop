@@ -52,7 +52,7 @@ lib.loadDirectory = root => {
       s = primitives.eat_whitespace(s).stream;
       let tokens = primitives.parse_list_tokens(null, primitives.try_any, s);
       if ( dres.isNegative(tokens) ) {
-        console.log('\0x1B[31;1mYES NEGATIVE TOKENS\0x1B[0m');
+        console.log('negative tokens', tokens);
       }
       let exS = streams.newListStream(tokens.value, 0);
 
