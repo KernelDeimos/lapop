@@ -7,6 +7,7 @@ var pattern = require('../semantics/pattern');
 var streams = require('./streams');
 var memory = require('./memory');
 var plugins = require('../utilities/plugins');
+var types = require('./types');
 
 var soup;
 
@@ -29,7 +30,7 @@ lib.process_pattern_by_name = (name, args, s) => {
         stream: s
       });
     }
-    let res = dhelp.processData(null, s.val());
+    let res = dhelp.processData(null, types.fromAstToDeprecated(s.val()));
     if ( dres.isNegative(res) ) return res;
     if ( res.type !== name ) return dres.result({
       status: 'defiant', 
@@ -99,7 +100,7 @@ lib.try_evaluatable = s => {
       }
       s = filling.stream;
       var r = dres.resOK([
-        ['symbol', jsnode.value],
+        { type: 'symbol', value: jsnode.value, source: 'interpreter' },
         ...filling.value
       ], {
         type: 'code',

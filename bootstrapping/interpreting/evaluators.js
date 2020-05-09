@@ -1,13 +1,14 @@
 var streams = require('./streams');
 var dhelp = require('../utilities/datahelper');
 var dres = require('../utilities/descriptiveresults');
+var types = require('./types');
 var lib = {};
 
 lib.try_function_name = s => {
   if ( typeof s.val() === 'string' ) {
     return dres.resOK(s.val());
   }
-  let symbolNode = dhelp.processData(null, s.val());
+  let symbolNode = dhelp.processData(null, types.fromAstToDeprecated(s.val()));
   if ( symbolNode.type === 'symbol' ) return symbolNode;
 
   symbolNode.status = 'invalid';
@@ -41,7 +42,7 @@ lib.baseEvaluator_ = config => funcMap => {
 
 lib.createEvaluator = easyConfig => {
   var argFilter = ( easyConfig.processArguments )
-    ? (api, args) => args.map(arg => dhelp.processData(null, arg))
+    ? (api, args) => args.map(arg => dhelp.processData(null, types.fromAstToDeprecated(arg)))
     : (api, args) => args;
   if ( easyConfig.evaluateCodeArguments ) {
     let prevFilter = argFilter;
@@ -54,7 +55,7 @@ lib.createEvaluator = easyConfig => {
       });
     } else {
       argFilter = (api, args) => args.map(arg => {
-        let parg = dhelp.processData(null, arg);
+        let parg = dhelp.processData(null, types.fromAstToDeprecated(arg));
         return ( parg.type === 'code' )
           ? api.evaluate(streams.newListStream(
             parg.value, 0))
