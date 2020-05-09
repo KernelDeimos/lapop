@@ -13,10 +13,10 @@ lib.variable[':'] = localUtil.newFunc((args, context) => {
 
   let o = {};
   o[varName.value] = fargs => { return varValu; };
-  context.registerMap('', o);
+  context.registerDeprecatedMap('', o);
 
   if ( varValu.type === 'funcmap' ) {
-    context.registerMap(varName.value, varValu.value);
+    context.registerDeprecatedMap(varName.value, varValu.value);
   }
 }, localUtil.newListValidator(['symbol','ignore']));
 
@@ -38,7 +38,7 @@ lib.variable[':fn'] = localUtil.newFunc((args, context) => {
         context.callResultHandler(api, res);
       }
     });
-    sub.registerMap('', {
+    sub.registerDeprecatedMap('', {
       "return": (args, ctx) => {
         return dres.result({
           status: 'populated',
@@ -52,7 +52,7 @@ lib.variable[':fn'] = localUtil.newFunc((args, context) => {
     if ( args.length < 3 ) {
       let argsFmapObj = {};
       argsFmapObj['args'] = () => { return { type: 'list', value: fargs } };
-      sub.registerMap('', argsFmapObj);
+      sub.registerDeprecatedMap('', argsFmapObj);
       return sub.ex(streams.newListStream(args[1].value, 0));
     }
     let argNames = args[1].api.keysInOrder();
@@ -61,14 +61,14 @@ lib.variable[':fn'] = localUtil.newFunc((args, context) => {
       argsFmapObj[argNames[i]] = () => fargs[i];
     }
     // ERROR HERE?
-    sub.registerMap('', argsFmapObj);
+    sub.registerDeprecatedMap('', argsFmapObj);
     let exRes = sub.ex(streams.newListStream(args[2].value, 0));
     if ( dres.isNegative(exRes) ) {
       return exRes;
     }
     return retval;
   };
-  context.registerMap('', o);
+  context.registerDeprecatedMap('', o);
 }, null);
 
 lib.variable['='] = localUtil.newFunc((args, context) => {

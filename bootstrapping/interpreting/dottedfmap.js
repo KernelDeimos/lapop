@@ -1,4 +1,5 @@
 var dres = require('../utilities/descriptiveresults');
+var dhelp = require('../utilities/datahelper');
 var functionmaps = require('./functionmaps');
 require('../utilities/util');
 
@@ -97,6 +98,28 @@ lib.newDottedFunctionMap = (delegate) => {
     for ( k in map ) if ( map.hasOwnProperty(k) ) {
       let name = (pkg === '' ? '' : ''+pkg+'.') + k;
       implementor.register(name, map[k]);
+    }
+  }
+
+  implementor.registerDeprecated = (name, f) => {
+    var w = lib.processFunctionName_(self, name);
+    if ( w.parts.length < 1 ) {
+      return dres.resInvalid('tried to register function with empty name');
+    }
+
+    fNew = (args, ctx) => {
+      console.log(args)
+      args = args.map(a => dhelp.processData(null, a.toDeprecated()))
+      return f(args, ctx);
+    };
+
+    w.targetNode[w.funcKey] = fNew;
+  }
+
+  implementor.registerDeprecatedMap = (pkg, map) => {
+    for ( k in map ) if ( map.hasOwnProperty(k) ) {
+      let name = (pkg === '' ? '' : ''+pkg+'.') + k;
+      implementor.registerDeprecated(name, map[k]);
     }
   }
 

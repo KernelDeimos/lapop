@@ -8,8 +8,10 @@ lib.try_function_name = s => {
   if ( typeof s.val() === 'string' ) {
     return dres.resOK(s.val());
   }
-  let symbolNode = dhelp.processData(null, types.fromAstToDeprecated(s.val()));
-  if ( symbolNode.type === 'symbol' ) return symbolNode;
+  let symbolNode = types.fromAstToApi(s.val());
+  if ( dres.isNegative(symbolNode) ) return symbolNode;
+  symbolNode = symbolNode.value;
+  if ( symbolNode.meta.type === 'symbol' ) return symbolNode;
 
   symbolNode.status = 'invalid';
   return symbolNode;
@@ -28,7 +30,7 @@ lib.baseEvaluator_ = config => funcMap => {
     var funcName = lib.try_function_name(s);
     if ( dres.isNegative(funcName) ) return funcName;
 
-    var func = funcMap.get(funcName.value);
+    var func = funcMap.get(funcName.getString());
     if ( dres.isNegative(func) ) return func;
 
     var args = s.next().rest();
@@ -42,7 +44,7 @@ lib.baseEvaluator_ = config => funcMap => {
 
 lib.createEvaluator = easyConfig => {
   var argFilter = ( easyConfig.processArguments )
-    ? (api, args) => args.map(arg => dhelp.processData(null, types.fromAstToDeprecated(arg)))
+    ? (api, args) => args.map(arg => types.fromAstToApi(arg).value) // TODO: chk isNegative
     : (api, args) => args;
   if ( easyConfig.evaluateCodeArguments ) {
     let prevFilter = argFilter;
@@ -55,7 +57,7 @@ lib.createEvaluator = easyConfig => {
       });
     } else {
       argFilter = (api, args) => args.map(arg => {
-        let parg = dhelp.processData(null, types.fromAstToDeprecated(arg));
+        let parg = types.fromAstToApi(arg).value; // TODO: chk isNegative
         return ( parg.type === 'code' )
           ? api.evaluate(streams.newListStream(
             parg.value, 0))

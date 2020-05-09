@@ -28,19 +28,42 @@ var fmaps  = require(
   './bootstrapping/interpreting/functionmaps');
 var context  = require(
   './bootstrapping/language/context');
+var types = require('./bootstrapping/interpreting/types');
 
 if ( process.env.hasOwnProperty('LEPOT_VERBOSE') && process.env.LEPOT_VERBOSE == 1 ) {
   memory.addListener(o => console.log(o));
 }
 
-var codePattern = [['list',['list', ['symbol', 'list']]]];
+// var codePattern = [['list',['list', ['symbol', 'list']]]];
+var codePattern = [
+  { type: 'list', value: [
+    { type: 'list', value: [
+      { type: 'symbol', value: 'list' },
+    ] }
+  ] }
+]
 memory.registry('pattern', 'script').def = codePattern;
 memory.registry('pattern', 'now').def = codePattern;
-memory.registry('pattern', 'put').def = [['list',
-  ['list', ['symbol', 'symbol-for-pattern'], ['symbol', 'sym_']],
-  ['list', ['symbol', 'symbol']],
-  ['list', ['symbol', 'pattern-from-symbol'], ['symbol', 'sym_']],
-]];
+memory.registry('pattern', 'put').def = [
+  { type: 'list', value: [
+    { type: 'list', value: [
+      { type: 'symbol', value: 'symbol-for-pattern' },
+      { type: 'symbol', value: 'sym_' },
+    ] },
+    { type: 'list', value: [
+      { type: 'symbol', value: 'symbol' },
+    ] },
+    { type: 'list', value: [
+      { type: 'symbol', value: 'pattern-from-symbol' },
+      { type: 'symbol', value: 'sym_' },
+    ] },
+  ] },
+];
+// memory.registry('pattern', 'put').def = [['list',
+//   ['list', ['symbol', 'symbol-for-pattern'], ['symbol', 'sym_']],
+//   ['list', ['symbol', 'symbol']],
+//   ['list', ['symbol', 'pattern-from-symbol'], ['symbol', 'sym_']],
+// ]];
 
 var lib = {};
 
@@ -160,11 +183,12 @@ directoryloader.loadDirectory(
   var loadedFunctions = registry.select(memory.registry_,
     { 'pattern': 'function' });
   loadedFunctions.forEach(def => {
+    // TODO: DRY: almost identical to memory.addListener
     let newFn = root.getOwner(':fn').call;
     let args = [
-      { type: 'symbol', value: def.for },
+      types.fromAstToApi({ type: 'symbol', value: def.for }).value,
       ...def.value.map(
-        v => dhelp.processData(null, v))
+        v => types.fromAstToApi(types.fromDeprecatedToAst(v)).value)
     ];
     let res = newFn(args, root);
     if ( dres.isNegative(res) ) {

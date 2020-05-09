@@ -15,7 +15,7 @@ lib.controlflow.while = (args, ctx) => {
       ctx.callResultHandler(api, res);
     }
   });
-  sub.registerMap('', {
+  sub.registerDeprecatedMap('', {
     "break": () => {
       return dres.result({ status: 'populated', type: 'break' });
     }
@@ -83,7 +83,7 @@ lib.controlflow.each = (args, ctx) => {
     loopVars[sym.value] = () => {
       return util.dhelp.processData(null, item);
     };
-    sub.registerMap('', loopVars);
+    sub.registerMaDeprecatedp('', loopVars);
     return sub.ex(streams.newListStream(scr.value, 0));
   });
 

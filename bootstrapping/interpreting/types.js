@@ -157,6 +157,14 @@ simpleType.fromAstToApi = (typeName, astNode) => {
     return astResult.resOK(newAstNode);
   };
 
+  api[
+    'get' + typeName.charAt(0).toUpperCase() + typeName.substring(1)
+  ] = () => internal;
+
+  if ( typeName === 'symbol' ) {
+    api.getString = () => internal;
+  }
+
   api.toDeprecated = () => {
     return [typeName, internal]
   };
@@ -195,8 +203,8 @@ lib.types = types;
 lib.fromAstToApi = astNode => {
   console.log('A:', astNode.type);
   api = lib.types[astNode.type].fromAstToApi(astNode);
-  api.meta = {};
-  api.meta.type = astNode.type;
+  api.value.meta = {};
+  api.value.meta.type = astNode.type;
   return api;
 }
 
@@ -213,6 +221,24 @@ lib.fromAstToDeprecated = astNode => {
     throw new Error('bad deprecated value for '+ astNode.type +': ' + JSON.stringify(retval));
   }
   return retval;
+}
+
+lib.fromDeprecatedToAst = depNode => {
+  console.log(depNode)
+  if ( ! Array.isArray(depNode) ) return depNode;
+  type = depNode[0];
+  if ( type == 'list' || type == 'code' || type == 'assoc' ) {
+    return {
+      type: type,
+      value: depNode.slice(1).map(v => lib.fromDeprecatedToAst(v)),
+      source: 'deprecated value'
+    }
+  }
+  return {
+    type: type,
+    value: lib.fromDeprecatedToAst(depNode[1]),
+    source: 'deprecated value'
+  }
 }
 
 module.exports = lib;

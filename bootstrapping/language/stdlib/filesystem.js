@@ -154,7 +154,7 @@ var fsfactory = {
 
 var lib = {};
 lib.install = api => {
-  api.registerMap('fs', fsfactory);
+  api.registerDeprecatedMap('fs', fsfactory);
 }
 
 module.exports = lib;

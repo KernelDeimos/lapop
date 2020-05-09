@@ -7,6 +7,7 @@ var interpreter = require(p+'/interpreting/interpreter')({
   registry: memory.registry });
 var basefunctions = require('./basefunctions');
 var dottedfmap = require('../interpreting/dottedfmap');
+var types = require('../interpreting/types');
 var stdlib = require('./stdlib/main');
 var cglib = require('./cglib/main');
 
@@ -26,6 +27,8 @@ lib.newContextAPI = (internal, context) => {
 
   api.register = internal.localFmap.register;
   api.registerMap = internal.localFmap.registerMap;
+  api.registerDeprecatedMap = internal.localFmap.registerDeprecatedMap;
+  api.registerDeprecated = internal.localFmap.registerDeprecated;
   api.object = map => {
     return fmaps.newObjectFunctionMap(map)
   }
@@ -107,10 +110,11 @@ lib.newStandardExecutionContext = () => {
     if ( event.type === 'put' && event.value.of === 'function' ) {
       let newFn = contextAPI.getOwner(':fn').call;
       let args = [
-        { type: 'symbol', value: event.value.for },
+        types.fromAstToApi({ type: 'symbol', value: event.value.for }).value,
         ...event.value.value.map(
-          v => util.dhelp.processData(null, v))
+          v => types.fromAstToApi(types.fromDeprecatedToAst(v)).value)
       ];
+      console.log('!!!', args)
       let res = newFn(
         args,
         contextAPI);

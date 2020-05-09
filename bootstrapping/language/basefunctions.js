@@ -56,7 +56,7 @@ lib.safety['checkFuncmap'] = localUtil.newFunc((args, context) => {
 lib.logger = require('./basefunctions/logger');
 
 lib.installLogger = api => {
-  api.registerMap('logger', lib.logger);
+  api.registerDeprecatedMap('logger', lib.logger);
 }
 
 lib.registry = {};
@@ -99,25 +99,25 @@ lib.dres.invalid = (args, ctx) => {
 
 lib.install = api => {
   lib.installLogger(api);
-  api.registerMap('', lib.registry);
-  api.registerMap('', lib.arithmetic);
-  api.registerMap('', lib.lists);
-  api.registerMap('', lib.boolean);
-  api.registerMap('', lib.controlflow);
-  api.registerMap('', lib.variable);
-  api.registerMap('', lib.conv);
-  api.registerMap('os', lib.os);
-  api.registerMap('_node', lib.testhacks);
-  api.registerMap('lepot.lang.safety', lib.safety);
-  api.registerMap('r', lib.dres);
+  api.registerDeprecatedMap('', lib.registry);
+  api.registerDeprecatedMap('', lib.arithmetic);
+  api.registerDeprecatedMap('', lib.lists);
+  api.registerDeprecatedMap('', lib.boolean);
+  api.registerDeprecatedMap('', lib.controlflow);
+  api.registerDeprecatedMap('', lib.variable);
+  api.registerDeprecatedMap('', lib.conv);
+  api.registerDeprecatedMap('os', lib.os);
+  api.registerDeprecatedMap('_node', lib.testhacks);
+  api.registerDeprecatedMap('lepot.lang.safety', lib.safety);
+  api.registerDeprecatedMap('r', lib.dres);
 
-  api.registerMap(
+  api.registerDeprecatedMap(
     'string',
     require('./basefunctions/string'));
-  api.registerMap(
+  api.registerDeprecatedMap(
     'map',
     require('./basefunctions/map'));
-  api.registerMap(
+  api.registerDeprecatedMap(
     '',
     require('./basefunctions/debug'));
 

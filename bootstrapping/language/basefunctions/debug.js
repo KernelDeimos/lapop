@@ -13,7 +13,7 @@ lib.debugfuncs['@'] = (args, ctx) => {
 }
 
 lib.debug['~!'] = (args, ctx) => {
-  ctx.registerMap('', lib.debugfuncs);
+  ctx.registerDeprecatedMap('', lib.debugfuncs);
   console.log('Debug functions added!')
   console.log('  @  - Dump variable')
   return dres.resOK();
