@@ -131,6 +131,19 @@ lib.isOK = o => false
   || o.status === 'empty'
   ;
 
+lib.either_ = (f, ...args) => {
+  if ( args.filter(arg => f(arg)).length > 0 ) return true;
+  return false;
+};
+lib.eitherKey_ = (f, o) => {
+  if ( Object.keys(o).filter(k => f(o[k])).length > 0 )
+    return true;
+  return false;
+}
+
+lib.eitherNegative = lib.either_.bind(lib, lib.isNegative);
+lib.eitherKeyNegative = lib.eitherKey_.bind(lib, lib.isNegative);
+
 lib.unknownIsDefiant = o => {
   if ( o.status === 'unknown' ) o.status = 'defiant';
   return o;
