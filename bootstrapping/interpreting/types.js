@@ -1,5 +1,4 @@
-var util = require('../utilities/util');
-var dres = util.dres;
+var dres = require('../utilities/descriptiveresults');
 
 /*
 
@@ -104,6 +103,9 @@ types.assoc.fromAstToApi = astNode => {
     });
     return astResult.resOK(newAstNode);
   };
+  api.keysInOrder = () => {
+    return internal.map(entry => entry.key);
+  }
 
   api.put = (k, v) => { newAstNode.push({ key: k, value: v }) };
 
@@ -143,7 +145,7 @@ simpleType.create_ = typeName => {
 }
 
 
-['string','float','bool'].forEach(typeName => {
+['string','float','bool', 'symbol'].forEach(typeName => {
   types[typeName] = simpleType.create_(typeName);
 });
 
@@ -160,7 +162,9 @@ Object.keys(types).forEach(k => {
 
 lib.types = types;
 
-lib.fromAstToApi = astNode =>
-  lib.types[astNode.type].fromAstToApi(astNode);
+lib.fromAstToApi = astNode => {
+  console.log('->', astNode.type);
+  return lib.types[astNode.type].fromAstToApi(astNode);
+}
 
 module.exports = lib;

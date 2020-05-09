@@ -2,6 +2,8 @@ var lib = {};
 
 var dres = require('./descriptiveresults.js');
 
+var types = require('../interpreting/types');
+
 lib.fmap_convertData = {
   list: data => dres.resOK(data),
   code: data => dres.resOK(data),
@@ -85,12 +87,10 @@ lib.processData = (funcMap, data) => {
     funcMap = lib.fmap_convertData;
   }
   if ( ! Array.isArray(data) ) {
-    return dres.resInvalid(
-      'internal error: tried to process non-list', {
-        subject: data,
-        trace: new Error()
-      }
-    );
+    if ( data.type === 'assoc' ) {
+      data.api = types.fromAstToApi(data).value;
+    }
+    return data;
   }
   if ( data.length < 1 ) {
     return dres.resInvalid(
@@ -131,18 +131,9 @@ lib.assertData = (funcMap, type, data) => {
   return result;
 }
 
-lib.listEqual = (lis1, lis2) => {
-  if ( lis1.length != lis2.length ) return false;
-  for ( let i=0; i < lis1.length; i++ ) {
-    if ( Array.isArray(lis1[i]) ) {
-      if ( ! Array.isArray(lis2[i]) ) return false;
-      return lib.listEqual(lis1[i], lis2[i]);
-    }
-    if ( lis1[i] !== lis2[i] ) {
-      return false;
-    }
-  }
-  return true;
-}
+var equals = require('./equals');
+Object.keys(equals)
+  .filter(k => equals.hasOwnProperty(k))
+  .forEach(k => lib[k] = equals[k]);
 
 module.exports = lib;

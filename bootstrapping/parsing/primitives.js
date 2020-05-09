@@ -1,6 +1,12 @@
 var dres = require('../utilities/descriptiveresults');
 var lib = {};
 
+var astResult = dres.subContext({
+  type: 'ast',
+  format: 'lepot',
+  source: 'parser'
+})
+
 lib.newStream = () => {};
 lib.newMutableStream = (str, pos) => {
   var o = {};
@@ -52,10 +58,11 @@ lib.try_symbol = (s) => {
   ) {
     value += ''+ms.chr();
   }
-  return dres.resOK(['symbol', value], {
-    status: 'populated',
+  return astResult.resOK({
     type: 'symbol',
-    stream: ms.getStuck()
+    value: value,
+  }, {
+    stream: ms.getStuck(),
   });
 }
 
@@ -100,11 +107,13 @@ lib.try_string = (s) => {
                 escaping = true;
                 continue;
             case escapeQuote:
-                return dres.resOK(['string', value], {
-                    type: 'string',
-                    escapeQuote: escapeQuote,
-                    stream: ms.getStuck().next()
-                })
+                return astResult.resOK({
+                  type: 'string',
+                  escapeQuote: escapeQuote,
+                  value: value,
+                }, {
+                  stream: ms.getStuck().next(),
+                });
             default:
                 value += ''+c;
         }
@@ -112,7 +121,7 @@ lib.try_string = (s) => {
     return dres.resInvalid({
         info: 'string did not terminate',
         stream: s
-    })
+    });
 };
 
 lib.try_float = s => {
@@ -165,7 +174,10 @@ lib.try_float = s => {
     applyDigit(c.charCodeAt(0)-48);
   }
 
-  return dres.resOK(['float', total], {
+  return astResult.resOK({
+    type: 'float',
+    value: total,
+  }, {
     stream: ms.getStuck()
   });
 }
@@ -323,9 +335,11 @@ lib.try_assoc_customized = (try_key, try_val, s) => {
         }
     }
 
-    return dres.resOK(['assoc', ...members], {
-        type: 'assoc',
-        stream: s
+    return astResult.resOK({
+      type: 'assoc',
+      value: [...members],
+    }, {
+      stream: s,
     });
 }
 
@@ -376,8 +390,10 @@ lib.try_list = (begin, term, tryer, s) => {
   s = r_items.stream;
   s = s.next();
 
-  return dres.resOK(r_items.value, {
+  return astResult.resOK({
     type: 'list',
+    value: r_items.value,
+  }, {
     stream: s,
   });
 }
@@ -402,7 +418,7 @@ var decorate_try_list = (begin, term, type) => {
   return (s) => {
     let res = lib.try_list(begin, term, lib.try_any, s);
     if ( dres.isOK(res) ) {
-      res.value = [type].concat(res.value);
+      res.value.type = type;
     }
     return res;
   }

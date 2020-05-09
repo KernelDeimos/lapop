@@ -31,4 +31,44 @@ test.SET('bootstrapping.utilities.datahelper', ts => {
   });
 });
 
+test.SET('bootstrapping.utilities.equal', ts => {
+  ts.CASE('equal function', tc => {
+    tc.RUN((t, _) => {
+      t.assert('== null null', dhelp.equal(null, null));
+      t.assert('== undefined undefined',
+        dhelp.equal(undefined, undefined));
+      t.assert('!= null undefined', ! dhelp.equal(null, undefined));
+      t.assert('!= undefined null', ! dhelp.equal(undefined, null));
+      t.assert('!= null {}',   ! dhelp.equal(null, {}));
+      t.assert('== "hi" "hi"', dhelp.equal("hi", "hi"));
+      t.assert('!= "1" 1',     ! dhelp.equal("1", 1));
+      t.assert('!= 1 "1"',     ! dhelp.equal(1, "1"));
+      t.assert(
+        '!= [1,2,3] [1,3,2]',
+        ! dhelp.equal([1,2,3],[1,3,2])
+      );
+      t.assert(
+        '== {a 1 b 2 c 3} {a 1 b 2 c 3}',
+        dhelp.equal({a:1,b:2,c:3},{a:1,b:2,c:3})
+      );
+      t.assert(
+        '!= {a 1 b 2 c 3} {a 1 b 3 c 2}',
+        ! dhelp.equal({a:1,b:2,c:3},{a:1,b:3,c:2})
+      );
+      t.assert(
+        '== {a 1 b [{a 1 b 2},4]} {a 1 b [{a 1 b 2},4]}',
+        dhelp.equal({a:1,b:[{a:1,b:2},4]},{a:1,b:[{a:1,b:2},4]})
+      );
+      t.assert(
+        '!= {a 1 b [{a 1 b 2},4]} {a 1 b [{a 1 b 5},4]}',
+        ! dhelp.equal({a:1,b:[{a:1,b:2},4]},{a:1,b:[{a:1,b:5},4]})
+      );
+      t.assert(
+        '!= {a 1 b [{a 1 b 2},4]} {a 1 b [{a 1 b 2},"4"]}',
+        ! dhelp.equal({a:1,b:[{a:1,b:2},4]},{a:1,b:[{a:1,b:5},4]})
+      );
+    });
+  });
+});
+
 test.all();
